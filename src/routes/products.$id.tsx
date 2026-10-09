@@ -75,6 +75,12 @@ function ProductPage() {
           </div>
           <p className="mt-1 text-xs text-muted-foreground">Inclusive of all taxes</p>
           <p className="mt-6 leading-relaxed text-foreground/80">{p.description}</p>
+          {!!p.highlights?.length && <ul className="mt-4 list-inside list-disc space-y-1 text-sm text-foreground/80">{p.highlights.map((h) => <li key={h}>{h}</li>)}</ul>}
+          {SPEC_FIELDS.some(([k]) => p[k]) && (
+            <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-2 rounded border p-4 text-sm">
+              {SPEC_FIELDS.filter(([k]) => p[k]).map(([k, l]) => <div key={k} className="contents"><dt className="text-muted-foreground">{l}</dt><dd>{String(p[k])}</dd></div>)}
+            </dl>
+          )}
 
           <div className="mt-7">
             <div className="eyebrow mb-3">Size: <span className="text-foreground">{size}</span></div>

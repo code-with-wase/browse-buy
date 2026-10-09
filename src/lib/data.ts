@@ -21,7 +21,20 @@ export type Product = {
   stock: number;
   tags: ("trending" | "new" | "best")[];
   rating: number;
+  // Marketplace-style (Flipkart / Meesho) listing fields — all optional
+  brand?: string; sku?: string; fabric?: string; fit?: string; pattern?: string;
+  sleeve?: string; neck?: string; occasion?: string; washCare?: string;
+  packOf?: string; countryOfOrigin?: string; weight?: string; hsn?: string;
+  highlights?: string[];
 };
+export const SPEC_FIELDS: [keyof Product, string][] = [
+  ["brand", "Brand"], ["sku", "SKU / Style code"], ["fabric", "Fabric"], ["fit", "Fit"], ["pattern", "Pattern"],
+  ["sleeve", "Sleeve"], ["neck", "Neck / Collar"], ["occasion", "Occasion"], ["washCare", "Wash care"],
+  ["packOf", "Pack of"], ["countryOfOrigin", "Country of origin"], ["weight", "Net weight"], ["hsn", "HSN code"],
+];
+/** Emails allowed into the admin panel (Ctrl+Shift+A). */
+export const ADMIN_EMAILS = ["admin@deluxeculture.in"];
+export const WHATSAPP_NUMBER = "919130726736";
 export type CartItem = { productId: string; size: string; color: string; qty: number };
 export type OrderStatus = "Pending payment" | "Confirmed" | "Shipped" | "Delivered" | "Cancelled";
 export type Order = {
