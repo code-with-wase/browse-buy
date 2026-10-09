@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { AlertTriangle, Boxes, LayoutDashboard, Package, Pencil, Plus, Settings as Cog, ShoppingCart, Tags, Trash2, Users, X } from "lucide-react";
+import { AlertTriangle, ImagePlus, LogOut, Boxes, LayoutDashboard, Package, Pencil, Plus, Settings as Cog, ShoppingCart, Tags, Trash2, Users, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -7,7 +7,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { formatINR, type Category, type OrderStatus, type Product, type Settings } from "@/lib/data";
+import { ADMIN_EMAILS, SPEC_FIELDS, formatINR, type Category, type OrderStatus, type Product, type Settings } from "@/lib/data";
 import { useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/admin")({
@@ -30,6 +30,35 @@ const TABS = [
 type Tab = (typeof TABS)[number][0];
 
 function Admin() {
+  const [ok, setOk] = useState<boolean | null>(null);
+  const [email, setEmail] = useState("");
+  const [bad, setBad] = useState("");
+  useEffect(() => { setOk(sessionStorage.getItem("dc_admin") === "1"); }, []);
+  if (ok === null) return null;
+  if (!ok) {
+    const go = (e: React.FormEvent) => {
+      e.preventDefault();
+      if (ADMIN_EMAILS.includes(email.trim().toLowerCase())) { sessionStorage.setItem("dc_admin", "1"); setOk(true); toast.success("Welcome, admin"); }
+      else { setBad("This email is not an admin. Access denied."); toast.error("Not an admin email"); }
+    };
+    return (
+      <div className="grid min-h-screen place-items-center px-4">
+        <form onSubmit={go} className="w-full max-w-sm animate-rise rounded-lg border bg-card p-8 shadow-gold">
+          <div className="eyebrow">Restricted</div>
+          <h1 className="mt-2 text-4xl">Admin Access</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Enter your admin email to continue.</p>
+          <input type="email" required autoFocus value={email} onChange={(e) => { setEmail(e.target.value); setBad(""); }} placeholder="admin@email.com" className="field mt-6" />
+          {bad && <p className="mt-2 text-xs text-destructive">{bad}</p>}
+          <button className="btn-gold mt-5 w-full">Enter Panel</button>
+          <Link to="/" className="mt-4 block text-center text-xs uppercase tracking-widest text-primary">Back to store</Link>
+        </form>
+      </div>
+    );
+  }
+  return <AdminPanel />;
+}
+
+function AdminPanel() {
   const [tab, setTab] = useState<Tab>("dashboard");
   const navigate = useNavigate();
   useEffect(() => {
@@ -43,7 +72,7 @@ function Admin() {
       <aside className="border-b bg-sidebar p-4 lg:sticky lg:top-0 lg:h-screen lg:border-r lg:border-b-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2"><img src="/favicon.svg" alt="" className="h-8 w-8" /><span className="font-serif text-lg text-gold-gradient">DC Admin</span></div>
-          <Link to="/" className="text-muted-foreground hover:text-primary" aria-label="Close admin"><X className="h-5 w-5" /></Link>
+          <div className="flex gap-2"><button onClick={() => { sessionStorage.removeItem("dc_admin"); navigate({ to: "/" }); }} className="text-muted-foreground hover:text-primary" aria-label="Log out"><LogOut className="h-5 w-5" /></button><Link to="/" className="text-muted-foreground hover:text-primary" aria-label="Close admin"><X className="h-5 w-5" /></Link></div>
         </div>
         <nav className="mt-4 flex gap-1 overflow-x-auto lg:mt-8 lg:flex-col">
           {TABS.map(([id, label, Icon]) => (
@@ -127,7 +156,7 @@ function ProductsAdmin() {
     const r = productSchema.safeParse(p);
     if (!r.success) return void toast.error("Please fill name, description, prices, category and stock correctly");
     if (p.price > p.originalPrice) return void toast.error("Price cannot exceed original price");
-    if (!p.images.length) return void toast.error("Add at least one image URL");
+    if (!p.images.length) return void toast.error("Add at least one image");
     if (p.id) setProducts(products.map((x) => (x.id === p.id ? p : x)));
     else {
       let id = slug(p.name) || "product";
@@ -168,13 +197,14 @@ function ProductsAdmin() {
 function ProductForm({ p, onSave, onClose }: { p: Product; onSave: (p: Product) => void; onClose: () => void }) {
   const { categories } = useStore();
   const [f, setF] = useState(p);
-  const [lists, setLists] = useState({ images: p.images.join("\n"), sizes: p.sizes.join(", "), colors: p.colors.join(", ") });
+  const [imgs, setImgs] = useState<string[]>(p.images);
+  const [lists, setLists] = useState({ highlights: (p.highlights ?? []).join("\n"), sizes: p.sizes.join(", "), colors: p.colors.join(", ") });
   const split = (s: string, sep: RegExp) => s.split(sep).map((x) => x.trim()).filter(Boolean);
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-background/70" onClick={onClose}>
       <div role="dialog" aria-label="Product form" onClick={(e) => e.stopPropagation()} className="h-full w-full max-w-lg animate-in slide-in-from-right overflow-y-auto border-l bg-card p-6">
         <div className="mb-5 flex items-center justify-between"><h2 className="text-3xl">{p.id ? "Edit Product" : "New Product"}</h2><button onClick={onClose} aria-label="Close"><X /></button></div>
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); onSave({ ...f, images: split(lists.images, /\n/), sizes: split(lists.sizes, /,/), colors: split(lists.colors, /,/) }); }}>
+        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); onSave({ ...f, images: imgs, highlights: split(lists.highlights, /\n/), sizes: split(lists.sizes, /,/), colors: split(lists.colors, /,/) }); }}>
           <L t="Name"><input className="field" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} maxLength={100} /></L>
           <L t="Description"><textarea className="field" rows={3} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} maxLength={1000} /></L>
           <div className="grid grid-cols-2 gap-3">
@@ -183,7 +213,28 @@ function ProductForm({ p, onSave, onClose }: { p: Product; onSave: (p: Product) 
             <L t="Category"><select className="field" value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })}>{categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></L>
             <L t="Stock"><input type="number" className="field" value={f.stock} onChange={(e) => setF({ ...f, stock: Math.max(0, +e.target.value) })} /></L>
           </div>
-          <L t="Image URLs (one per line)"><textarea className="field" rows={3} value={lists.images} onChange={(e) => setLists({ ...lists, images: e.target.value })} /></L>
+          <L t="Product photos">
+            <div className="grid grid-cols-4 gap-2">
+              {imgs.map((src, i) => (
+                <div key={i} className="group relative aspect-[4/5] overflow-hidden rounded border">
+                  <img src={src} alt="" className="h-full w-full object-cover" />
+                  <button type="button" onClick={() => setImgs(imgs.filter((_, j) => j !== i))} className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-background/80 opacity-0 transition group-hover:opacity-100" aria-label="Remove photo"><X className="h-3 w-3" /></button>
+                  {i === 0 && <span className="absolute bottom-1 left-1 rounded bg-primary px-1 text-[0.6rem] text-primary-foreground">Cover</span>}
+                </div>
+              ))}
+              <label className="grid aspect-[4/5] cursor-pointer place-items-center rounded border border-dashed text-center text-[0.65rem] text-muted-foreground transition hover:border-primary hover:text-primary">
+                <span><ImagePlus className="mx-auto mb-1 h-5 w-5" />Upload from gallery</span>
+                <input type="file" accept="image/*" multiple className="hidden" onChange={async (e) => { const fl = Array.from(e.target.files ?? []); e.target.value = ""; const out = await Promise.all(fl.map(compress)); setImgs((x) => [...x, ...out]); }} />
+              </label>
+            </div>
+            <input className="field mt-2" placeholder="…or paste an image URL and press Enter" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const v = e.currentTarget.value.trim(); if (v) { setImgs([...imgs, v]); e.currentTarget.value = ""; } } }} />
+          </L>
+          <L t="Key highlights (one per line)"><textarea className="field" rows={3} value={lists.highlights} onChange={(e) => setLists({ ...lists, highlights: e.target.value })} /></L>
+          <div className="grid grid-cols-2 gap-3">
+            {SPEC_FIELDS.map(([k, label]) => (
+              <L key={k} t={label}><input className="field" value={(f[k] as string) ?? ""} onChange={(e) => setF({ ...f, [k]: e.target.value })} maxLength={120} /></L>
+            ))}
+          </div>
           <L t="Sizes (comma separated)"><input className="field" value={lists.sizes} onChange={(e) => setLists({ ...lists, sizes: e.target.value })} /></L>
           <L t="Colours (comma separated)"><input className="field" value={lists.colors} onChange={(e) => setLists({ ...lists, colors: e.target.value })} /></L>
           <L t="Sections">
@@ -198,6 +249,26 @@ function ProductForm({ p, onSave, onClose }: { p: Product; onSave: (p: Product) 
       </div>
     </div>
   );
+}
+/** Resize gallery photos so they fit in browser storage. */
+function compress(file: File): Promise<string> {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onerror = rej;
+    r.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const sc = Math.min(1, 900 / Math.max(img.width, img.height));
+        const c = document.createElement("canvas");
+        c.width = img.width * sc; c.height = img.height * sc;
+        c.getContext("2d")!.drawImage(img, 0, 0, c.width, c.height);
+        res(c.toDataURL("image/jpeg", 0.75));
+      };
+      img.onerror = rej;
+      img.src = r.result as string;
+    };
+    r.readAsDataURL(file);
+  });
 }
 function L({ t, children }: { t: string; children: React.ReactNode }) { return <label className="block"><span className="eyebrow mb-1.5 block">{t}</span>{children}</label>; }
 

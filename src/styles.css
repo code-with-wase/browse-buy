@@ -102,6 +102,8 @@
   }
   h1, h2, h3, h4 { font-family: var(--font-serif); font-weight: 500; letter-spacing: 0.01em; }
   input, select, textarea { color-scheme: dark; }
+  button, a, [role="button"], select, label:has(input[type="file"]), summary { cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
 }
 
 @utility text-gold-gradient {
@@ -123,15 +125,20 @@
   display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
   background: var(--gradient-gold); color: var(--color-primary-foreground);
   padding: 0.8rem 1.6rem; font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 500;
-  border-radius: var(--radius); transition: transform .25s, box-shadow .25s;
-  &:hover { transform: translateY(-2px); box-shadow: var(--shadow-gold); }
+  border-radius: var(--radius); transition: transform .3s cubic-bezier(.2,.7,.2,1), box-shadow .3s;
+  position: relative; overflow: hidden; cursor: pointer;
+  &::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 30%, oklch(1 0 0 / 45%) 50%, transparent 70%); transform: translateX(-120%); transition: transform .7s ease; }
+  &:hover { transform: translateY(-2px) scale(1.03); box-shadow: var(--shadow-gold); }
+  &:hover::after { transform: translateX(120%); }
+  &:active { transform: scale(.96); }
   &:disabled { opacity: .5; pointer-events: none; }
 }
 @utility btn-outline {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
   border: 1px solid var(--color-primary); color: var(--color-primary);
   padding: 0.8rem 1.6rem; font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase;
-  border-radius: var(--radius); transition: background .25s, color .25s;
+  border-radius: var(--radius); transition: background .25s, color .25s, transform .3s; cursor: pointer;
+  &:active { transform: scale(.96); }
   &:hover { background: var(--color-primary); color: var(--color-primary-foreground); }
 }
 @utility field {
@@ -144,7 +151,17 @@
 @keyframes rise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
 @keyframes slowzoom { from { transform: scale(1.12); } to { transform: scale(1); } }
 @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.35); } 100% { transform: scale(1); } }
-@utility animate-rise { animation: rise .8s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes cine { from { opacity: 0; transform: translateY(18px) scale(1.01); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
+@utility animate-rise { animation: cine .9s cubic-bezier(.2,.7,.2,1) both; }
+@utility btn-card {
+  position: relative; overflow: hidden; cursor: pointer;
+  transition: transform .3s cubic-bezier(.2,.7,.2,1), box-shadow .3s, background .3s, color .3s;
+  &::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 30%, oklch(1 0 0 / 35%) 50%, transparent 70%); transform: translateX(-120%); transition: transform .6s ease; }
+  &:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--shadow-gold); }
+  &:hover:not(:disabled)::after { transform: translateX(120%); }
+  &:hover:not(:disabled) svg { animation: pop .45s ease; }
+  &:active:not(:disabled) { transform: scale(.95); }
+}
 @utility animate-slowzoom { animation: slowzoom 6s ease-out both; }
 @utility animate-pop { animation: pop .4s ease; }
 .reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s ease, transform .8s ease; }

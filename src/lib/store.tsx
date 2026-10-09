@@ -1,6 +1,7 @@
 // Frontend-only store. All data lives in localStorage for DEMO purposes.
 // Replace the load/save helpers with API calls when a backend is added.
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import {
   defaultCategories, defaultProducts, defaultSettings,
   type CartItem, type Category, type Order, type Product, type Settings,
@@ -30,7 +31,8 @@ function load<T>(key: string, fallback: T): T {
   } catch { return fallback; }
 }
 function save(key: string, v: unknown) {
-  try { localStorage.setItem("dc_" + key, JSON.stringify(v)); } catch { /* ignore */ }
+  try { localStorage.setItem("dc_" + key, JSON.stringify(v)); }
+  catch { toast.error("Browser storage is full — use fewer or smaller photos"); }
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {

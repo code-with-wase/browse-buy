@@ -25,7 +25,7 @@ export function ProductCard({ p }: { p: Product }) {
       <button
         onClick={() => { toggleWish(p.id); toast(wished ? "Removed from wishlist" : "Added to wishlist"); }}
         aria-label="Toggle wishlist"
-        className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-background/70 backdrop-blur transition hover:scale-110"
+        className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-background/70 backdrop-blur transition hover:scale-110 active:scale-90 cursor-pointer"
       >
         <Heart className={`h-4 w-4 ${wished ? "animate-pop fill-primary text-primary" : ""}`} />
       </button>
@@ -38,10 +38,10 @@ export function ProductCard({ p }: { p: Product }) {
         </div>
         <div className="mt-2 flex flex-wrap gap-1 text-[0.65rem] text-muted-foreground">{p.sizes.slice(0, 5).map((s) => <span key={s} className="rounded border px-1.5 py-0.5">{s}</span>)}</div>
         <div className="mt-4 grid grid-cols-2 gap-2">
-          <button disabled={out} onClick={() => { addToCart(item); toast.success(`${p.name} added to cart`); }} className="flex items-center justify-center gap-1.5 rounded border border-primary/60 py-2 text-[0.65rem] tracking-widest uppercase text-primary transition hover:bg-primary hover:text-primary-foreground disabled:opacity-40">
+          <button disabled={out} onClick={() => { addToCart(item); toast.success(`${p.name} added to cart`); }} className="btn-card flex items-center justify-center gap-1.5 rounded border border-primary/60 py-2 text-[0.65rem] tracking-widest uppercase text-primary transition hover:bg-primary hover:text-primary-foreground disabled:opacity-40">
             <ShoppingBag className="h-3.5 w-3.5" /> Add
           </button>
-          <button disabled={out} onClick={() => buyNow(item)} className="btn-gold gap-1.5 px-2 py-2 text-[0.65rem]">
+          <button disabled={out} onClick={() => buyNow(item)} className="btn-gold btn-card gap-1.5 px-2 py-2 text-[0.65rem]">
             <Zap className="h-3.5 w-3.5" /> Buy Now
           </button>
         </div>
