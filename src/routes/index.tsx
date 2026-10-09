@@ -152,7 +152,7 @@ function Newsletter() {
           className="mx-auto mt-7 flex max-w-md flex-col gap-2 sm:flex-row"
           onSubmit={(e) => {
             e.preventDefault();
-            if (!z.string().email().safeParse(email.trim()).success) { toast.error("Please enter a valid email");
+            if (!z.string().email().safeParse(email.trim()).success) return void toast.error("Please enter a valid email");
             toast.success("Welcome to the Inner Circle!");
             setEmail("");
           }}
