@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { Heart, ShoppingBag, Star, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { discount, formatINR, type Product } from "@/lib/data";
