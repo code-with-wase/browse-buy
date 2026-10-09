@@ -125,9 +125,9 @@ function ProductsAdmin() {
 
   const save = (p: Product) => {
     const r = productSchema.safeParse(p);
-    if (!r.success) return toast.error("Please fill name, description, prices, category and stock correctly");
-    if (p.price > p.originalPrice) return toast.error("Price cannot exceed original price");
-    if (!p.images.length) return toast.error("Add at least one image URL");
+    if (!r.success) { toast.error("Please fill name, description, prices, category and stock correctly");
+    if (p.price > p.originalPrice) { toast.error("Price cannot exceed original price");
+    if (!p.images.length) { toast.error("Add at least one image URL");
     if (p.id) setProducts(products.map((x) => (x.id === p.id ? p : x)));
     else {
       let id = slug(p.name) || "product";
@@ -207,10 +207,10 @@ function CategoriesAdmin() {
   const [isNew, setIsNew] = useState(false);
   const [del, setDel] = useState<string | null>(null);
   const save = () => {
-    if (!edit || edit.name.trim().length < 2) return toast.error("Name is required");
+    if (!edit || edit.name.trim().length < 2) { toast.error("Name is required");
     if (isNew) {
       const id = slug(edit.name);
-      if (categories.some((c) => c.id === id)) return toast.error("Category already exists");
+      if (categories.some((c) => c.id === id)) { toast.error("Category already exists");
       setCategories([...categories, { ...edit, id }]);
     } else setCategories(categories.map((c) => (c.id === edit.id ? edit : c)));
     toast.success("Category saved"); setEdit(null);
@@ -342,8 +342,8 @@ function SettingsAdmin() {
       <H>Site Content & Settings</H>
       <form className="grid max-w-3xl gap-4 sm:grid-cols-2" onSubmit={(e) => {
         e.preventDefault();
-        if (!/^\d{10,15}$/.test(f.whatsapp)) return toast.error("WhatsApp must be digits with country code, e.g. 919130726736");
-        if (!/^[\w.-]+@[\w]+$/.test(f.upiId)) return toast.error("Enter a valid UPI ID");
+        if (!/^\d{10,15}$/.test(f.whatsapp)) { toast.error("WhatsApp must be digits with country code, e.g. 919130726736");
+        if (!/^[\w.-]+@[\w]+$/.test(f.upiId)) { toast.error("Enter a valid UPI ID");
         setSettings(f); toast.success("Settings saved");
       }}>
         {field("brand", "Brand name")}{field("tagline", "Tagline")}
@@ -355,7 +355,7 @@ function SettingsAdmin() {
           <input type="file" accept="image/*" className="field" onChange={(e) => {
             const file = e.target.files?.[0];
             if (!file) return;
-            if (file.size > 500_000) return toast.error("Please use an image under 500 KB");
+            if (file.size > 500_000) { toast.error("Please use an image under 500 KB");
             const r = new FileReader(); r.onload = () => setF({ ...f, qrImage: String(r.result) }); r.readAsDataURL(file);
           }} />
           {f.qrImage && <div className="mt-2 flex items-center gap-3"><img src={f.qrImage} alt="QR" className="h-20 w-20 rounded bg-ivory object-contain" /><button type="button" onClick={() => setF({ ...f, qrImage: "" })} className="text-xs text-destructive">Remove</button></div>}

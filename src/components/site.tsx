@@ -30,7 +30,7 @@ export function Header() {
   const navigate = useNavigate();
   const count = cart.reduce((a, b) => a + b.qty, 0);
   const [bump, setBump] = useState(false);
-  useEffect(() => { if (count) { setBump(true); const t = setTimeout(() => setBump(false), 400); return () => clearTimeout(t); } }, [count]);
+  useEffect(() => { if (!count) return; setBump(true); const t = setTimeout(() => setBump(false), 400); return () => clearTimeout(t); }, [count]);
 
   const doSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,7 +131,7 @@ export function Reveal({ children, className = "", delay = 0 }: { children: Reac
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { el.classList.add("in"); io.disconnect(); } }, { threshold: 0.12 });
+    const io = new IntersectionObserver(([e]) => { if (e?.isIntersecting) { el.classList.add("in"); io.disconnect(); } }, { threshold: 0.12 });
     io.observe(el);
     return () => io.disconnect();
   }, []);

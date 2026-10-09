@@ -29,7 +29,7 @@ function ProductPage() {
   const [qty, setQty] = useState(1);
   const [zoom, setZoom] = useState({ on: false, x: 50, y: 50 });
 
-  useEffect(() => { if (p) { setSize(p.sizes[0]); setColor(p.colors[0]); setImg(0); setQty(1); } }, [p?.id]);
+  useEffect(() => { if (p) { setSize(p.sizes[0] ?? ""); setColor(p.colors[0] ?? ""); setImg(0); setQty(1); } }, [p?.id]);
 
   if (!p) {
     return (

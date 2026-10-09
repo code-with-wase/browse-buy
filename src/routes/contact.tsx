@@ -27,7 +27,7 @@ const schema = z.object({
 function Contact() {
   const { settings } = useStore();
   const [f, setF] = useState({ name: "", email: "", message: "" });
-  const [err, setErr] = useState<Record<string, string>>({});
+  const [err, setErr] = useState<Partial<Record<string, string>>>({});
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const r = schema.safeParse(f);
@@ -63,7 +63,7 @@ function Contact() {
           <div>
             <label htmlFor="message" className="eyebrow">Message</label>
             <textarea id="message" rows={5} className="field mt-2" value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} maxLength={1000} />
-            {err.message && <p className="mt-1 text-xs text-destructive">{err.message}</p>}
+            {err["message"] && <p className="mt-1 text-xs text-destructive">{err["message"]}</p>}
           </div>
           <button className="btn-gold w-full"><MessageCircle className="h-4 w-4" />Send via WhatsApp</button>
         </form>

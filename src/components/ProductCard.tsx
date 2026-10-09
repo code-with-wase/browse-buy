@@ -10,7 +10,7 @@ export function ProductCard({ p }: { p: Product }) {
   const buyNow = useBuyNow();
   const wished = wishlist.includes(p.id);
   const out = p.stock <= 0;
-  const item = { productId: p.id, size: p.sizes[Math.min(1, p.sizes.length - 1)], color: p.colors[0], qty: 1 };
+  const item = { productId: p.id, size: p.sizes[Math.min(1, p.sizes.length - 1)] ?? "", color: p.colors[0] ?? "", qty: 1 };
 
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-lg border bg-card transition-all duration-500 hover:-translate-y-1 hover:border-primary/50 hover:shadow-gold">

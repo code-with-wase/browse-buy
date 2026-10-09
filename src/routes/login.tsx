@@ -28,7 +28,7 @@ function Login() {
   const { user, login, ready } = useStore();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: "", email: "" });
-  const [err, setErr] = useState<Record<string, string>>({});
+  const [err, setErr] = useState<Partial<Record<string, string>>>({});
   // only allow internal paths
   const dest = redirect && redirect.startsWith("/") && !redirect.startsWith("//") ? redirect : "/";
 
@@ -52,12 +52,12 @@ function Login() {
           <div>
             <label htmlFor="name" className="eyebrow">Full name</label>
             <input id="name" className="field mt-2" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} maxLength={80} />
-            {err.name && <p className="mt-1 text-xs text-destructive">{err.name}</p>}
+            {err["name"] && <p className="mt-1 text-xs text-destructive">{err["name"]}</p>}
           </div>
           <div>
             <label htmlFor="email" className="eyebrow">Email address</label>
             <input id="email" type="email" className="field mt-2" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} maxLength={255} />
-            {err.email && <p className="mt-1 text-xs text-destructive">{err.email}</p>}
+            {err["email"] && <p className="mt-1 text-xs text-destructive">{err["email"]}</p>}
           </div>
           <button className="btn-gold w-full">Continue</button>
         </form>
