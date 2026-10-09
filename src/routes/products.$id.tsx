@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ProductGrid } from "@/components/ProductCard";
 import { SectionTitle } from "@/components/site";
-import { defaultProducts, discount, formatINR } from "@/lib/data";
+import { defaultProducts, discount, formatINR, SPEC_FIELDS } from "@/lib/data";
 import { useStore } from "@/lib/store";
 import { useBuyNow } from "@/lib/useBuyNow";
 
