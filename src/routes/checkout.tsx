@@ -3,7 +3,7 @@ import { CheckCircle2, MessageCircle, QrCode, Smartphone, Wallet } from "lucide-
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { formatINR, type Order } from "@/lib/data";
+import { formatINR, WHATSAPP_NUMBER, type Order } from "@/lib/data";
 import { shippingFor, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/checkout")({
@@ -30,17 +30,27 @@ const schema = z.object({
 });
 type Form = z.infer<typeof schema>;
 const PAY = [
-  { id: "UPI", label: "UPI", icon: Wallet, desc: "GPay, Paytm, any UPI app" },
-  { id: "PhonePe", label: "PhonePe", icon: Smartphone, desc: "Pay via PhonePe" },
-  { id: "QR", label: "Scan & Pay", icon: QrCode, desc: "Scan our QR code" },
+  { id: "PhonePe", label: "PhonePe / UPI", icon: Smartphone, desc: "Opens PhonePe on your phone to pay" },
+  { id: "COD", label: "Cash on Delivery", icon: Wallet, desc: "Pay in cash when it arrives" },
 ];
+
+function orderMessage(o: Order, brand: string) {
+  return [
+    `*New Order — ${brand}*`, `Order Ref: ${o.id}`, "",
+    `*Customer*`, o.customer.name, `Mobile: ${o.customer.mobile}`, `Email: ${o.customer.email}`,
+    `Address: ${o.customer.address}, ${o.customer.city}, ${o.customer.state} - ${o.customer.pin}`, "",
+    `*Items*`, ...o.items.map((i) => `• ${i.name} (${i.size}, ${i.color}) x ${i.qty} = ${formatINR(i.price * i.qty)}`), "",
+    `Subtotal: ${formatINR(o.subtotal)}`, `Shipping: ${o.shipping ? formatINR(o.shipping) : "FREE"}`, `*Total: ${formatINR(o.total)}*`, "",
+    `Payment: ${o.payment === "COD" ? "Cash on Delivery" : "PhonePe / UPI (customer redirected to pay)"}`,
+  ].join("\n");
+}
 
 function Checkout() {
   const { ready, user, checkout, cart, products, settings, addOrder, clearCart } = useStore();
   const navigate = useNavigate();
   const [form, setForm] = useState<Form>({ name: "", mobile: "", email: "", address: "", city: "", state: "", pin: "" });
   const [err, setErr] = useState<Partial<Record<keyof Form, string>>>({});
-  const [pay, setPay] = useState("UPI");
+  const [pay, setPay] = useState("PhonePe");
   const [placed, setPlaced] = useState<Order | null>(null);
 
   // Login required to buy
@@ -66,26 +76,30 @@ function Checkout() {
 
   if (!ready || !user) return <div className="py-32 text-center text-muted-foreground">Loading…</div>;
 
+  const waNumber = (settings.whatsapp || "").replace(/\D/g, "") || WHATSAPP_NUMBER;
+  const waLink = (o: Order) => `https://wa.me/${waNumber}?text=${encodeURIComponent(orderMessage(o, settings.brand))}`;
+  const upiLink = (o: Order, scheme: "phonepe" | "upi") =>
+    `${scheme}://pay?pa=${encodeURIComponent(settings.upiId)}&pn=${encodeURIComponent(settings.brand)}&am=${o.total}&cu=INR&tn=${encodeURIComponent("Order " + o.id)}`;
+
   if (placed) {
-    const msg = [
-      `*New Order — ${settings.brand}*`, `Order Ref: ${placed.id}`, "",
-      `*Customer*`, placed.customer.name, `📞 ${placed.customer.mobile}`, `✉️ ${placed.customer.email}`,
-      `📍 ${placed.customer.address}, ${placed.customer.city}, ${placed.customer.state} - ${placed.customer.pin}`, "",
-      `*Items*`, ...placed.items.map((i) => `• ${i.name} (${i.size}, ${i.color}) × ${i.qty} = ${formatINR(i.price * i.qty)}`), "",
-      `Subtotal: ${formatINR(placed.subtotal)}`, `Shipping: ${placed.shipping ? formatINR(placed.shipping) : "FREE"}`, `*Total: ${formatINR(placed.total)}*`, "",
-      `Payment: ${placed.payment} — Status: Pending verification`,
-    ].join("\n");
-    const wa = `https://wa.me/${settings.whatsapp}?text=${encodeURIComponent(msg)}`;
     return (
       <div className="mx-auto max-w-xl px-4 py-20 text-center">
-        <CheckCircle2 className="mx-auto h-14 w-14 text-primary" strokeWidth={1.2} />
-        <h1 className="mt-5 text-4xl">Order Received</h1>
+        <CheckCircle2 className="mx-auto h-14 w-14 animate-pop text-primary" strokeWidth={1.2} />
+        <h1 className="mt-5 text-4xl">Order Placed</h1>
         <p className="mt-2 text-muted-foreground">Reference <span className="text-champagne">{placed.id}</span> · {formatINR(placed.total)}</p>
         <div className="mt-6 rounded-lg border bg-card p-5 text-left text-sm text-muted-foreground">
-          Your payment is <b className="text-foreground">not yet verified</b>. Please complete the payment to <b className="text-champagne">{settings.upiId}</b> and send your order on WhatsApp so our team can confirm it. WhatsApp may ask you to press <b>Send</b>.
+          {placed.payment === "COD"
+            ? <>Your order details were sent to us on WhatsApp. If WhatsApp didn't open, tap the button below and press <b className="text-foreground">Send</b>. Pay in cash on delivery.</>
+            : <>Your order was sent on WhatsApp. Complete the payment of <b className="text-champagne">{formatINR(placed.total)}</b> in PhonePe. Our team verifies payment before dispatch.</>}
         </div>
-        <a href={wa} target="_blank" rel="noreferrer" className="btn-gold mt-7"><MessageCircle className="h-4 w-4" />Send Order on WhatsApp</a>
-        <Link to="/products" className="mt-5 block text-xs tracking-widest text-primary uppercase">Continue Shopping</Link>
+        <div className="mt-7 flex flex-col items-center gap-3">
+          <a href={waLink(placed)} target="_blank" rel="noreferrer" className="btn-gold"><MessageCircle className="h-4 w-4" />Send Order on WhatsApp</a>
+          {placed.payment !== "COD" && <>
+            <a href={upiLink(placed, "phonepe")} className="btn-outline"><Smartphone className="h-4 w-4" />Pay with PhonePe</a>
+            <a href={upiLink(placed, "upi")} className="text-xs uppercase tracking-widest text-primary">Pay with any UPI app</a>
+          </>}
+        </div>
+        <Link to="/products" className="mt-6 block text-xs tracking-widest text-primary uppercase">Continue Shopping</Link>
       </div>
     );
   }
@@ -120,6 +134,13 @@ function Checkout() {
     sessionStorage.removeItem("dc_checkout_form");
     setPlaced(order);
     window.scrollTo({ top: 0 });
+    // Send order to WhatsApp, then (for PhonePe) open the payment app.
+    if (pay === "COD") {
+      window.location.href = waLink(order);
+    } else {
+      window.open(waLink(order), "_blank");
+      setTimeout(() => { window.location.href = upiLink(order, "phonepe"); }, 800);
+    }
   };
 
   const F = (k: keyof Form, label: string, props: React.InputHTMLAttributes<HTMLInputElement> = {}) => (
@@ -150,23 +171,24 @@ function Checkout() {
           </section>
           <section className="rounded-lg border bg-card p-6">
             <h2 className="text-2xl">Payment Method</h2>
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {PAY.map((m) => (
-                <button type="button" key={m.id} onClick={() => setPay(m.id)} className={`rounded-lg border p-4 text-left transition ${pay === m.id ? "border-primary bg-accent" : "hover:border-primary/60"}`}>
+                <button type="button" key={m.id} onClick={() => setPay(m.id)} className={`rounded-lg border p-4 text-left transition duration-300 hover:-translate-y-0.5 ${pay === m.id ? "border-primary bg-accent" : "hover:border-primary/60"}`}>
                   <m.icon className="h-6 w-6 text-primary" />
                   <div className="mt-2 font-medium">{m.label}</div>
                   <div className="text-xs text-muted-foreground">{m.desc}</div>
                 </button>
               ))}
             </div>
-            <div className="mt-5 flex flex-col items-center gap-4 rounded border p-5 sm:flex-row">
+            {pay !== "COD" && <div className="mt-5 flex flex-col items-center gap-4 rounded border p-5 sm:flex-row">
               {settings.qrImage ? <img src={settings.qrImage} alt="Payment QR" className="h-36 w-36 rounded bg-ivory object-contain p-1" /> : (
                 <div className="grid h-36 w-36 shrink-0 place-items-center rounded border border-dashed text-center text-xs text-muted-foreground"><div><QrCode className="mx-auto mb-1 h-8 w-8" />QR coming soon</div></div>
               )}
               <div className="text-sm text-muted-foreground">
-                Pay <b className="text-champagne">{formatINR(total)}</b> to UPI ID <b className="text-foreground">{settings.upiId}</b>. After placing the order, send it on WhatsApp — our team verifies payment manually before dispatch.
+                Pay <b className="text-champagne">{formatINR(total)}</b> to UPI ID <b className="text-foreground">{settings.upiId}</b>. After placing the order, PhonePe opens automatically — our team verifies payment manually before dispatch.
               </div>
-            </div>
+            </div>}
+            {pay === "COD" && <p className="mt-5 rounded border p-4 text-sm text-muted-foreground">Place the order and your details go straight to our WhatsApp. Pay <b className="text-champagne">{formatINR(total)}</b> in cash on delivery.</p>}
           </section>
         </div>
         <aside className="h-fit rounded-lg border bg-card p-6 lg:sticky lg:top-32">
