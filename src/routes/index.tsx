@@ -6,8 +6,8 @@ import { discount, formatINR, type Product } from "@/lib/data";
 import { useBuyNow } from "@/lib/useBuyNow";
 import { toast } from "sonner";
 import { z } from "zod";
-import hero from "@/assets/hero.jpg";
-import promo from "@/assets/p4.jpg";
+import hero from "@/assets/hero.webp";
+import promo from "@/assets/p4.webp";
 import { ProductGrid } from "@/components/ProductCard";
 import { Reveal, SectionTitle } from "@/components/site";
 import { useStore } from "@/lib/store";
@@ -32,7 +32,7 @@ function Home() {
     <>
       {/* HERO */}
       <section className="relative h-[88vh] min-h-[560px] overflow-hidden">
-        <img src={hero} alt="Man in black tailored suit" width={1600} height={1008} className="animate-slowzoom absolute inset-0 h-full w-full object-cover object-[70%_center]" />
+        <img src={hero} fetchPriority="high" decoding="async" alt="Man in black tailored suit" width={1600} height={1008} className="animate-slowzoom absolute inset-0 h-full w-full object-cover object-[70%_center]" />
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
         <div className="relative mx-auto flex h-full max-w-7xl items-center px-4 sm:px-6">
           <div className="max-w-xl animate-rise">
@@ -189,7 +189,7 @@ function TrendingCarousel({ items }: { items: Product[] }) {
           return (
             <div key={p.id} aria-hidden={!active} className={`absolute inset-0 grid transition-all duration-[1200ms] ease-out md:grid-cols-2 ${active ? "z-10 opacity-100" : "pointer-events-none z-0 opacity-0"}`}>
               <div className="relative h-64 overflow-hidden md:h-full">
-                <img src={p.images[0]} alt={p.name} className={`h-full w-full object-cover transition-transform duration-[6000ms] ease-out ${active ? "scale-100" : "scale-125"}`} />
+                <img src={p.images[0]} alt={p.name} loading="lazy" decoding="async" className={`h-full w-full object-cover transition-transform duration-[6000ms] ease-out ${active ? "scale-100" : "scale-125"}`} />
                 <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent md:bg-gradient-to-l" />
               </div>
               <div className={`flex flex-col justify-center p-6 transition-all delay-300 duration-1000 sm:p-12 ${active ? "translate-x-0 opacity-100 blur-0" : "translate-x-10 opacity-0 blur-sm"}`}>

@@ -3,7 +3,7 @@ import { WHATSAPP_NUMBER } from "@/lib/data";
 import { Heart, LogOut, Menu, Search, ShoppingBag, User, X, Instagram, Facebook, MessageCircle } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useStore } from "@/lib/store";
-import logoImg from "@/assets/logo.png";
+import logoImg from "@/assets/logo.webp";
 
 export function Logo({ small }: { small?: boolean }) {
   return (

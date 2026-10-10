@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Crown, Gem, Leaf, Scissors } from "lucide-react";
-import img from "@/assets/p2.jpg";
-import img2 from "@/assets/p5.jpg";
+import img from "@/assets/p2.webp";
+import img2 from "@/assets/p5.webp";
 import { PageHero, Reveal, SectionTitle } from "@/components/site";
 
 export const Route = createFileRoute("/about")({
