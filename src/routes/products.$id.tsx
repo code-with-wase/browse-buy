@@ -39,7 +39,6 @@ function ProductPage() {
       </div>
     );
   }
-  const out = p.stock <= 0;
   const item = { productId: p.id, size, color, qty };
   const related = products.filter((x) => x.category === p.category && x.id !== p.id).concat(products.filter((x) => x.category !== p.category)).slice(0, 4);
 
@@ -95,14 +94,14 @@ function ProductPage() {
             <div className="flex items-center rounded border">
               <button onClick={() => setQty(Math.max(1, qty - 1))} className="p-2.5" aria-label="Decrease"><Minus className="h-4 w-4" /></button>
               <span className="w-10 text-center">{qty}</span>
-              <button onClick={() => setQty(Math.min(10, p.stock, qty + 1))} className="p-2.5" aria-label="Increase"><Plus className="h-4 w-4" /></button>
+              <button onClick={() => setQty(Math.min(10, qty + 1))} className="p-2.5" aria-label="Increase"><Plus className="h-4 w-4" /></button>
             </div>
-            <span className={`text-xs ${out ? "text-destructive" : "text-success"}`}>{out ? "Out of stock" : p.stock < 10 ? `Only ${p.stock} left` : "In stock"}</span>
+            <span className="text-xs text-success">Ready to order</span>
           </div>
 
           <div className="mt-8 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
-            <button disabled={out} onClick={() => { addToCart(item); toast.success("Added to cart"); }} className="btn-outline disabled:opacity-40"><ShoppingBag className="h-4 w-4" />Add to Cart</button>
-            <button disabled={out} onClick={() => buyNow(item)} className="btn-gold"><Zap className="h-4 w-4" />Buy Now</button>
+            <button onClick={() => { addToCart(item); toast.success("Added to cart"); }} className="btn-outline disabled:opacity-40"><ShoppingBag className="h-4 w-4" />Add to Cart</button>
+            <button onClick={() => buyNow(item)} className="btn-gold"><Zap className="h-4 w-4" />Buy Now</button>
             <button onClick={() => toggleWish(p.id)} className="btn-outline px-4" aria-label="Wishlist"><Heart className={`h-4 w-4 ${wishlist.includes(p.id) ? "fill-primary" : ""}`} /></button>
           </div>
           <div className="mt-6 flex items-center gap-2 rounded border bg-card p-4 text-sm text-muted-foreground"><Truck className="h-5 w-5 text-primary" />Delivery in 3–7 days · Easy 7-day returns · Sign-in with email needed only at purchase</div>

@@ -58,8 +58,32 @@ function Admin() {
   return <AdminPanel />;
 }
 
+function StockAlert({ onClose, onManage }: { onClose: () => void; onManage: () => void }) {
+  const { products } = useStore();
+  const low = [...products].filter((p) => p.stock < 10).sort((a, b) => a.stock - b.stock);
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-background/80 p-4 backdrop-blur" onClick={onClose}>
+      <div role="dialog" aria-label="Low stock alert" onClick={(e) => e.stopPropagation()} className="w-full max-w-lg animate-rise rounded-lg border bg-card p-6 shadow-gold">
+        <div className="flex items-center gap-2 text-primary"><AlertTriangle className="h-5 w-5" /><span className="eyebrow">Stock Alert</span></div>
+        <h2 className="mt-2 text-3xl">{low.length ? `${low.length} products need restocking` : "All products well stocked"}</h2>
+        <ul className="mt-5 max-h-80 space-y-2 overflow-y-auto">
+          {low.map((p) => (
+            <li key={p.id} className="flex items-center gap-3 rounded border p-2">
+              <img src={p.images[0]} alt="" className="h-12 w-10 rounded object-cover" />
+              <span className="flex-1 text-sm">{p.name}</span>
+              <span className={`rounded px-2 py-0.5 text-xs ${p.stock === 0 ? "bg-destructive text-destructive-foreground" : "bg-accent text-accent-foreground"}`}>{p.stock === 0 ? "0 left" : `${p.stock} left`}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-6 flex gap-2"><button onClick={onManage} className="btn-gold flex-1">Manage Inventory</button><button onClick={onClose} className="btn-outline">Later</button></div>
+      </div>
+    </div>
+  );
+}
+
 function AdminPanel() {
   const [tab, setTab] = useState<Tab>("dashboard");
+  const [alert, setAlert] = useState(true);
   const navigate = useNavigate();
   useEffect(() => {
     const h = (e: KeyboardEvent) => { if (e.key === "Escape" && !document.querySelector("[role=dialog],[role=alertdialog]")) navigate({ to: "/" }); };
@@ -88,6 +112,7 @@ function AdminPanel() {
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           Demo mode: data is saved only in this browser. This panel is not secured — real admin login and a database are required before going live.
         </div>
+        {alert && <StockAlert onClose={() => setAlert(false)} onManage={() => { setAlert(false); setTab("inventory"); }} />}
         <div key={tab} className="animate-rise">
           {tab === "dashboard" && <Dashboard />}
           {tab === "products" && <ProductsAdmin />}
