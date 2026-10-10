@@ -1,12 +1,14 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { WHATSAPP_NUMBER } from "@/lib/data";
 import { Heart, LogOut, Menu, Search, ShoppingBag, User, X, Instagram, Facebook, MessageCircle } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useStore } from "@/lib/store";
+import logoImg from "@/assets/logo.png";
 
 export function Logo({ small }: { small?: boolean }) {
   return (
     <Link to="/" className="flex items-center gap-2.5" aria-label="Deluxe Culture home">
-      <img src="/favicon.svg" alt="" className={small ? "h-8 w-8" : "h-10 w-10"} />
+      <img src={logoImg} alt="Deluxe Culture logo" className={small ? "h-10 w-auto" : "h-12 w-auto"} />
       <div className="leading-none">
         <div className="font-serif text-lg tracking-[0.25em] text-gold-gradient sm:text-xl">DELUXE CULTURE</div>
         <div className="mt-1 text-[0.55rem] tracking-[0.5em] text-muted-foreground">MEN'S WEAR</div>
@@ -103,7 +105,7 @@ export function Footer() {
           <div className="mt-5 flex gap-3 text-muted-foreground">
             <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram" className="hover:text-primary"><Instagram className="h-5 w-5" /></a>
             <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook" className="hover:text-primary"><Facebook className="h-5 w-5" /></a>
-            <a href={`https://wa.me/${settings.whatsapp}`} target="_blank" rel="noreferrer" aria-label="WhatsApp" className="hover:text-primary"><MessageCircle className="h-5 w-5" /></a>
+            <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer" aria-label="WhatsApp" className="hover:text-primary"><MessageCircle className="h-5 w-5" /></a>
           </div>
         </div>
         <FooterCol title="Shop" links={[["/products", "All Products"], ["/products", "New Arrivals"], ["/cart", "Cart"]]} />

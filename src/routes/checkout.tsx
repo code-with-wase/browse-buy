@@ -76,8 +76,8 @@ function Checkout() {
 
   if (!ready || !user) return <div className="py-32 text-center text-muted-foreground">Loading…</div>;
 
-  const waNumber = (settings.whatsapp || "").replace(/\D/g, "") || WHATSAPP_NUMBER;
-  const waLink = (o: Order) => `https://api.whatsapp.com/send?phone=${waNumber}&text=${encodeURIComponent(orderMessage(o, settings.brand))}`;
+  const waNumber = WHATSAPP_NUMBER;
+  const waLink = (o: Order) => `https://wa.me/${waNumber}?text=${encodeURIComponent(orderMessage(o, settings.brand))}`;
   const upiLink = (o: Order, scheme: "phonepe" | "upi") =>
     `${scheme}://pay?pa=${encodeURIComponent(settings.upiId)}&pn=${encodeURIComponent(settings.brand)}&am=${o.total}&cu=INR&tn=${encodeURIComponent("Order " + o.id)}`;
 
