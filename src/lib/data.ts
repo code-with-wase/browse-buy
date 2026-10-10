@@ -70,7 +70,7 @@ export const defaultSettings: Settings = {
   shippingFee: 99,
   freeShippingAbove: 1999,
   heroTitle: "Dress Like a Better You.",
-  heroSubtitle: "Tailored menswear crafted for the man who leads every room he walks into.",
+  heroSubtitle: "Stylish menswear made for the man who stands out with confidence and class.",
   announcement: "Free shipping on orders above ₹1,999 · Easy 7-day returns",
 };
 
