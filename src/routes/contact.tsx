@@ -34,7 +34,7 @@ function Contact() {
     if (!r.success) return setErr(Object.fromEntries(r.error.issues.map((i) => [i.path[0], i.message])));
     setErr({});
     const text = `Hello ${settings.brand},\nName: ${r.data.name}\nEmail: ${r.data.email}\n\n${r.data.message}`;
-    window.open(`https://wa.me/${settings.whatsapp}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
     toast.success("Opening WhatsApp — press Send to deliver your message");
     setF({ name: "", email: "", message: "" });
   };
@@ -44,7 +44,7 @@ function Contact() {
       <PageHero eyebrow="Get in Touch" title="Contact Us" sub="Our team replies within a few hours, 10 AM – 8 PM, Monday to Saturday." />
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 md:grid-cols-[1fr_1.4fr]">
         <div className="space-y-5">
-          <a href={`https://wa.me/${settings.whatsapp}`} target="_blank" rel="noreferrer" className="flex items-center gap-4 rounded-lg border bg-card p-5 transition hover:border-primary">
+          <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer" className="flex items-center gap-4 rounded-lg border bg-card p-5 transition hover:border-primary">
             <MessageCircle className="h-7 w-7 text-primary" /><div><div className="font-serif text-xl">WhatsApp Support</div><div className="text-sm text-muted-foreground">{phone}</div></div>
           </a>
           <a href={`tel:+${settings.whatsapp}`} className="flex items-center gap-4 rounded-lg border bg-card p-5 hover:border-primary"><Phone className="h-7 w-7 text-primary" /><div><div className="font-serif text-xl">Call Us</div><div className="text-sm text-muted-foreground">{phone}</div></div></a>
