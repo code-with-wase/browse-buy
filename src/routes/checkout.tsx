@@ -77,7 +77,7 @@ function Checkout() {
   if (!ready || !user) return <div className="py-32 text-center text-muted-foreground">Loading…</div>;
 
   const waNumber = (settings.whatsapp || "").replace(/\D/g, "") || WHATSAPP_NUMBER;
-  const waLink = (o: Order) => `https://wa.me/${waNumber}?text=${encodeURIComponent(orderMessage(o, settings.brand))}`;
+  const waLink = (o: Order) => `https://api.whatsapp.com/send?phone=${waNumber}&text=${encodeURIComponent(orderMessage(o, settings.brand))}`;
   const upiLink = (o: Order, scheme: "phonepe" | "upi") =>
     `${scheme}://pay?pa=${encodeURIComponent(settings.upiId)}&pn=${encodeURIComponent(settings.brand)}&am=${o.total}&cu=INR&tn=${encodeURIComponent("Order " + o.id)}`;
 
@@ -135,12 +135,10 @@ function Checkout() {
     setPlaced(order);
     window.scrollTo({ top: 0 });
     // Send order to WhatsApp, then (for PhonePe) open the payment app.
-    if (pay === "COD") {
-      window.location.href = waLink(order);
-    } else {
-      window.open(waLink(order), "_blank");
-      setTimeout(() => { window.location.href = upiLink(order, "phonepe"); }, 800);
-    }
+    // Always open WhatsApp in a new tab (it refuses to load inside frames).
+    const w = window.open(waLink(order), "_blank", "noopener");
+    if (!w) toast("Tap 'Send Order on WhatsApp' to send your order");
+    if (pay !== "COD") setTimeout(() => { try { window.top!.location.href = upiLink(order, "phonepe"); } catch { window.location.href = upiLink(order, "phonepe"); } }, 900);
   };
 
   const F = (k: keyof Form, label: string, props: React.InputHTMLAttributes<HTMLInputElement> = {}) => (
