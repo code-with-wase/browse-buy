@@ -1,6 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Gem, RotateCcw, ShieldCheck, Truck, Quote } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { discount, formatINR, type Product } from "@/lib/data";
+import { useBuyNow } from "@/lib/useBuyNow";
 import { toast } from "sonner";
 import { z } from "zod";
 import hero from "@/assets/hero.jpg";
@@ -63,7 +66,7 @@ function Home() {
         </div>
       </section>
 
-      <ProductRow eyebrow="Most Wanted" title="Trending Now" items={by("trending")} />
+      <TrendingCarousel items={products.filter((p) => p.tags.includes("trending"))} />
 
       {/* PROMO */}
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -161,6 +164,57 @@ function Newsletter() {
           <button className="btn-gold shrink-0">Subscribe</button>
         </form>
       </Reveal>
+    </section>
+  );
+}
+
+function TrendingCarousel({ items }: { items: Product[] }) {
+  const [i, setI] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const buyNow = useBuyNow();
+  const n = items.length;
+  useEffect(() => {
+    if (paused || n < 2) return;
+    const t = setInterval(() => setI((x) => (x + 1) % n), 4500);
+    return () => clearInterval(t);
+  }, [paused, n]);
+  if (!n) return null;
+  const go = (d: number) => setI((x) => (x + d + n) % n);
+  return (
+    <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+      <SectionTitle eyebrow="Most Wanted" title="Trending Now" />
+      <div className="relative h-[520px] overflow-hidden rounded-lg border bg-card sm:h-[460px]">
+        {items.map((p, k) => {
+          const active = k === i;
+          return (
+            <div key={p.id} aria-hidden={!active} className={`absolute inset-0 grid transition-all duration-[1200ms] ease-out md:grid-cols-2 ${active ? "z-10 opacity-100" : "pointer-events-none z-0 opacity-0"}`}>
+              <div className="relative h-64 overflow-hidden md:h-full">
+                <img src={p.images[0]} alt={p.name} className={`h-full w-full object-cover transition-transform duration-[6000ms] ease-out ${active ? "scale-100" : "scale-125"}`} />
+                <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent md:bg-gradient-to-l" />
+              </div>
+              <div className={`flex flex-col justify-center p-6 transition-all delay-300 duration-1000 sm:p-12 ${active ? "translate-x-0 opacity-100 blur-0" : "translate-x-10 opacity-0 blur-sm"}`}>
+                <div className="eyebrow">Trending #{k + 1}</div>
+                <h3 className="mt-3 text-4xl sm:text-5xl"><span className="text-gold-gradient">{p.name}</span></h3>
+                <p className="mt-4 line-clamp-3 text-sm text-muted-foreground">{p.description}</p>
+                <div className="mt-5 flex items-baseline gap-3">
+                  <span className="text-2xl text-champagne">{formatINR(p.price)}</span>
+                  <span className="text-sm text-muted-foreground line-through">{formatINR(p.originalPrice)}</span>
+                  {discount(p) > 0 && <span className="rounded bg-gold-gradient px-2 py-0.5 text-xs text-primary-foreground">{discount(p)}% OFF</span>}
+                </div>
+                <div className="mt-7 flex flex-wrap gap-3">
+                  <button onClick={() => buyNow({ productId: p.id, size: p.sizes[Math.min(1, p.sizes.length - 1)] ?? "", color: p.colors[0] ?? "", qty: 1 })} className="btn-gold">Buy Now</button>
+                  <Link to="/products/$id" params={{ id: p.id }} className="btn-outline">View Details</Link>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        <button onClick={() => go(-1)} aria-label="Previous" className="absolute left-3 top-32 z-20 grid h-10 w-10 place-items-center rounded-full border bg-background/70 backdrop-blur transition hover:scale-110 hover:border-primary md:top-1/2 md:-translate-y-1/2"><ChevronLeft className="h-5 w-5" /></button>
+        <button onClick={() => go(1)} aria-label="Next" className="absolute right-3 top-32 z-20 grid h-10 w-10 place-items-center rounded-full border bg-background/70 backdrop-blur transition hover:scale-110 hover:border-primary md:top-1/2 md:-translate-y-1/2"><ChevronRight className="h-5 w-5" /></button>
+        <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2">
+          {items.map((p, k) => <button key={p.id} onClick={() => setI(k)} aria-label={`Slide ${k + 1}`} className={`h-1.5 rounded-full transition-all duration-500 ${k === i ? "w-8 bg-primary" : "w-3 bg-muted-foreground/40"}`} />)}
+        </div>
+      </div>
     </section>
   );
 }

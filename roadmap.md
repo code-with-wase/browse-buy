@@ -1,0 +1,8 @@
+- [x] Checkout: WhatsApp order, PhonePe redirect, COD
+- [x] Admin email gate, product CRUD, marketplace fields, gallery upload
+- [x] Button hover animations + hand cursor, vercel.json
+- [x] Fix "wa.me refused to connect" on COD
+- [x] No "sold out" for customers; always orderable
+- [x] Low-stock alert page after admin login
+- [x] Cinematic trending carousel on home
+- [x] Remove rating from product card
