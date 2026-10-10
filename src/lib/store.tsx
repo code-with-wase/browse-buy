@@ -47,7 +47,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [checkout, setCheckoutS] = useState<CheckoutSource>({ mode: "cart" });
 
   useEffect(() => {
-    setProductsS(load("products", defaultProducts));
+    setProductsS(load<Product[]>("products", defaultProducts).map((p) => {
+      const d = defaultProducts.find((x) => x.id === p.id);
+      const ok = (u: string) => u.startsWith("data:") || u.startsWith("http") || defaultProducts.some((x) => x.images.includes(u));
+      const imgs = p.images.filter(ok);
+      return { ...p, images: imgs.length ? imgs : d?.images ?? p.images };
+    }));
     setCategoriesS(load("categories", defaultCategories));
     setSettingsS({ ...defaultSettings, ...load("settings", {}) });
     setOrdersS(load("orders", []));

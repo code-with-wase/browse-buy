@@ -14,7 +14,7 @@ export function ProductCard({ p }: { p: Product }) {
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-lg border bg-card transition-all duration-500 hover:-translate-y-1 hover:border-primary/50 hover:shadow-gold">
       <Link to="/products/$id" params={{ id: p.id }} className="relative block aspect-[4/5] overflow-hidden">
-        <img src={p.images[0]} alt={p.name} loading="lazy" width={800} height={1000} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+        <img src={p.images[0]} alt={p.name} loading="lazy" decoding="async" width={800} height={1000} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
         <div className="absolute left-3 top-3 flex flex-col gap-1.5">
           {discount(p) > 0 && <span className="rounded bg-gold-gradient px-2 py-0.5 text-[0.65rem] font-semibold text-primary-foreground">{discount(p)}% OFF</span>}
           {p.tags.includes("new") && <span className="rounded bg-background/80 px-2 py-0.5 text-[0.65rem] tracking-widest text-champagne">NEW</span>}
