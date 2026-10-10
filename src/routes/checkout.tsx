@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { CheckCircle2, MessageCircle, QrCode, Smartphone, Wallet } from "lucide-react";
+import { CheckCircle2, Copy, MessageCircle, QrCode, Smartphone, Wallet } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -82,23 +82,41 @@ function Checkout() {
     `${scheme}://pay?pa=${encodeURIComponent(settings.upiId)}&pn=${encodeURIComponent(settings.brand)}&am=${o.total}&cu=INR&tn=${encodeURIComponent("Order " + o.id)}`;
 
   if (placed) {
+    const cod = placed.payment === "COD";
+    const payDone = `https://wa.me/${waNumber}?text=${encodeURIComponent(`Payment done for Order ${placed.id} — ${formatINR(placed.total)}. Screenshot attached.`)}`;
+    const Step = ({ n, title, children }: { n: number; title: string; children: React.ReactNode }) => (
+      <li className="flex gap-4 rounded-lg border bg-card p-5 text-left">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-gold-gradient text-sm font-semibold text-primary-foreground">{n}</span>
+        <div className="flex-1"><h3 className="text-lg">{title}</h3><div className="mt-2 text-sm text-muted-foreground">{children}</div></div>
+      </li>
+    );
     return (
-      <div className="mx-auto max-w-xl px-4 py-20 text-center">
+      <div className="mx-auto max-w-xl px-4 py-16 text-center">
         <CheckCircle2 className="mx-auto h-14 w-14 animate-pop text-primary" strokeWidth={1.2} />
         <h1 className="mt-5 text-4xl">Order Placed</h1>
         <p className="mt-2 text-muted-foreground">Reference <span className="text-champagne">{placed.id}</span> · {formatINR(placed.total)}</p>
-        <div className="mt-6 rounded-lg border bg-card p-5 text-left text-sm text-muted-foreground">
-          {placed.payment === "COD"
-            ? <>Your order details were sent to us on WhatsApp. If WhatsApp didn't open, tap the button below and press <b className="text-foreground">Send</b>. Pay in cash on delivery.</>
-            : <>Your order was sent on WhatsApp. Complete the payment of <b className="text-champagne">{formatINR(placed.total)}</b> in PhonePe. Our team verifies payment before dispatch.</>}
-        </div>
-        <div className="mt-7 flex flex-col items-center gap-3">
-          <a href={waLink(placed)} target="_blank" rel="noreferrer" className="btn-gold"><MessageCircle className="h-4 w-4" />Send Order on WhatsApp</a>
-          {placed.payment !== "COD" && <>
-            <a href={upiLink(placed, "phonepe")} className="btn-outline"><Smartphone className="h-4 w-4" />Pay with PhonePe</a>
-            <a href={upiLink(placed, "upi")} className="text-xs uppercase tracking-widest text-primary">Pay with any UPI app</a>
+        <p className="mt-4 text-sm text-muted-foreground">Follow these steps in order:</p>
+        <ol className="mt-4 space-y-3">
+          <Step n={1} title="Send your order on WhatsApp">
+            WhatsApp opens with your order ready — just press <b className="text-foreground">Send</b>, then come back here.
+            <a href={waLink(placed)} target="_blank" rel="noreferrer" className="btn-gold mt-3 w-full"><MessageCircle className="h-4 w-4" />Send Order on WhatsApp</a>
+          </Step>
+          {cod ? (
+            <Step n={2} title="Done!">Pay <b className="text-champagne">{formatINR(placed.total)}</b> in cash when your order arrives.</Step>
+          ) : <>
+            <Step n={2} title={`Pay ${formatINR(placed.total)}`}>
+              Tap a button below, or scan the QR / copy the UPI ID in any UPI app (PhonePe, GPay, Paytm).
+              {settings.qrImage && <img src={settings.qrImage} alt="Payment QR" className="mx-auto mt-3 h-40 w-40 rounded bg-ivory object-contain p-1" />}
+              <button type="button" onClick={() => { navigator.clipboard?.writeText(settings.upiId); toast.success("UPI ID copied"); }} className="btn-outline mt-3 w-full"><Copy className="h-4 w-4" />{settings.upiId} — Copy</button>
+              <a href={upiLink(placed, "upi")} className="btn-gold mt-2 w-full"><Wallet className="h-4 w-4" />Pay with any UPI app</a>
+              <a href={upiLink(placed, "phonepe")} className="btn-outline mt-2 w-full"><Smartphone className="h-4 w-4" />Open PhonePe</a>
+            </Step>
+            <Step n={3} title="Send payment screenshot">
+              After paying, send the screenshot on WhatsApp so we can confirm and dispatch.
+              <a href={payDone} target="_blank" rel="noreferrer" className="btn-outline mt-3 w-full"><MessageCircle className="h-4 w-4" />I have paid — send screenshot</a>
+            </Step>
           </>}
-        </div>
+        </ol>
         <Link to="/products" className="mt-6 block text-xs tracking-widest text-primary uppercase">Continue Shopping</Link>
       </div>
     );
@@ -136,9 +154,7 @@ function Checkout() {
     window.scrollTo({ top: 0 });
     // Send order to WhatsApp, then (for PhonePe) open the payment app.
     // Always open WhatsApp in a new tab (it refuses to load inside frames).
-    const w = window.open(waLink(order), "_blank", "noopener");
-    if (!w) toast("Tap 'Send Order on WhatsApp' to send your order");
-    if (pay !== "COD") setTimeout(() => { try { window.top!.location.href = upiLink(order, "phonepe"); } catch { window.location.href = upiLink(order, "phonepe"); } }, 900);
+    toast.success("Order placed — follow the steps to finish");
   };
 
   const F = (k: keyof Form, label: string, props: React.InputHTMLAttributes<HTMLInputElement> = {}) => (
@@ -183,7 +199,7 @@ function Checkout() {
                 <div className="grid h-36 w-36 shrink-0 place-items-center rounded border border-dashed text-center text-xs text-muted-foreground"><div><QrCode className="mx-auto mb-1 h-8 w-8" />QR coming soon</div></div>
               )}
               <div className="text-sm text-muted-foreground">
-                Pay <b className="text-champagne">{formatINR(total)}</b> to UPI ID <b className="text-foreground">{settings.upiId}</b>. After placing the order, PhonePe opens automatically — our team verifies payment manually before dispatch.
+                Pay <b className="text-champagne">{formatINR(total)}</b> to UPI ID <b className="text-foreground">{settings.upiId}</b>. After placing the order you will see simple steps: send order on WhatsApp, then pay. Our team verifies payment manually before dispatch.
               </div>
             </div>}
             {pay === "COD" && <p className="mt-5 rounded border p-4 text-sm text-muted-foreground">Place the order and your details go straight to our WhatsApp. Pay <b className="text-champagne">{formatINR(total)}</b> in cash on delivery.</p>}
