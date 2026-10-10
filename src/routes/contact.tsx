@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { WHATSAPP_NUMBER } from "@/lib/data";
 import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";

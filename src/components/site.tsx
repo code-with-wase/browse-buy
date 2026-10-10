@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { WHATSAPP_NUMBER } from "@/lib/data";
 import { Heart, LogOut, Menu, Search, ShoppingBag, User, X, Instagram, Facebook, MessageCircle } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useStore } from "@/lib/store";
