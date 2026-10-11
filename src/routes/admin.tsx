@@ -7,8 +7,9 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ADMIN_EMAILS, SPEC_FIELDS, formatINR, type Category, type OrderStatus, type Product, type Settings } from "@/lib/data";
+import { SPEC_FIELDS, formatINR, type Category, type OrderStatus, type Product, type Settings } from "@/lib/data";
 import { useStore } from "@/lib/store";
+import { loginApi } from "@/axios/axiosInstance";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -33,13 +34,26 @@ function Admin() {
   const [ok, setOk] = useState<boolean | null>(null);
   const [email, setEmail] = useState("");
   const [bad, setBad] = useState("");
+  const [busy, setBusy] = useState(false);
   useEffect(() => { setOk(sessionStorage.getItem("dc_admin") === "1"); }, []);
   if (ok === null) return null;
   if (!ok) {
-    const go = (e: React.FormEvent) => {
+    const go = async (e: React.FormEvent) => {
       e.preventDefault();
-      if (ADMIN_EMAILS.includes(email.trim().toLowerCase())) { sessionStorage.setItem("dc_admin", "1"); setOk(true); toast.success("Welcome, admin"); }
-      else { setBad("This email is not an admin. Access denied."); toast.error("Not an admin email"); }
+      const em = email.trim().toLowerCase();
+      setBusy(true);
+      try {
+        // Admin role comes from the backend users collection (role: "admin").
+        const res = await loginApi("Admin", em);
+        if (res.user?.role === "admin") {
+          if (res.token) localStorage.setItem("dc_token", res.token);
+          sessionStorage.setItem("dc_admin", "1"); setOk(true); toast.success(`Welcome, ${res.user.name}`);
+        } else { setBad("This email is not an admin. Access denied."); toast.error("Not an admin email"); }
+      } catch (ex: unknown) {
+        const err = ex as { response?: { data?: { message?: string } }; message?: string };
+        const msg = err.response?.data?.message ?? (err.response ? "Login failed" : "Cannot reach the server (blocked by CORS or offline). Check the backend's allowed origins.");
+        setBad(msg); toast.error(msg);
+      } finally { setBusy(false); }
     };
     return (
       <div className="grid min-h-screen place-items-center px-4">
