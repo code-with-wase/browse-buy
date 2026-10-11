@@ -36,5 +36,5 @@ export const getProductById = async (id: string) => { const d = (await axiosInst
 export const getProductBySlug = async (slug: string) => { const d = (await axiosInstance.get(`/products/slug/${slug}`)).data; return mapProduct(d.product ?? d.data); };
 
 // Auth APIs
-export const loginApi = async (name: string, email: string) => (await axiosInstance.post("/auth/login", { name, email })).data as { token?: string; user?: { name: string; email: string } };
+export const loginApi = async (name: string, email: string) => (await axiosInstance.post("/auth/login", { name, email })).data as { token?: string; user?: { id?: string; name: string; email: string; role?: string } };
 export const getMe = async () => (await axiosInstance.get("/auth/me")).data;
