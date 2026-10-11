@@ -61,6 +61,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setUser(load("user", null));
     setCheckoutS(load("checkout", { mode: "cart" }));
     setReady(true);
+    import("@/axios/axiosInstance").then(({ getProducts }) => getProducts()).then((list) => {
+      if (list.length) setProductsS((cur) => [...list, ...cur.filter((c) => !list.some((l) => l.id === c.id))]);
+    }).catch(() => { /* backend unreachable — keep local products */ });
   }, []);
 
   useEffect(() => { if (ready) save("cart", cart); }, [cart, ready]);

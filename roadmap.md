@@ -6,3 +6,6 @@
 - [x] Low-stock alert page after admin login
 - [x] Cinematic trending carousel on home
 - [x] Remove rating from product card
+- [x] Faster images, PhonePe step-by-step flow
+- [x] Axios instance + backend products/login
+- [ ] Backend must allow website origin (CORS) — user action

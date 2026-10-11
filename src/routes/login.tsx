@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useStore } from "@/lib/store";
+import { loginApi } from "@/axios/axiosInstance";
 
 export const Route = createFileRoute("/login")({
   validateSearch: z.object({ redirect: z.string().optional() }),
@@ -34,11 +35,22 @@ function Login() {
 
   useEffect(() => { if (ready && user) navigate({ to: dest, replace: true }); }, [ready, user]);
 
-  const submit = (e: React.FormEvent) => {
+  const [busy, setBusy] = useState(false);
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const r = schema.safeParse(form);
     if (!r.success) { setErr(Object.fromEntries(r.error.issues.map((i) => [i.path[0], i.message]))); return; }
-    login({ name: r.data.name, email: r.data.email.toLowerCase() });
+    setBusy(true);
+    try {
+      const res = await loginApi(r.data.name, r.data.email.toLowerCase());
+      if (res.token) localStorage.setItem("dc_token", res.token);
+      login({ name: res.user?.name ?? r.data.name, email: (res.user?.email ?? r.data.email).toLowerCase() });
+    } catch (ex: unknown) {
+      const msg = (ex as { response?: { data?: { message?: string } } }).response?.data?.message;
+      if (msg) { setBusy(false); toast.error(msg); return; }
+      login({ name: r.data.name, email: r.data.email.toLowerCase() }); // server unreachable — continue offline
+    }
+    setBusy(false);
     toast.success(`Welcome, ${r.data.name}`);
   };
 
@@ -59,7 +71,7 @@ function Login() {
             <input id="email" type="email" className="field mt-2" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} maxLength={255} />
             {err["email"] && <p className="mt-1 text-xs text-destructive">{err["email"]}</p>}
           </div>
-          <button className="btn-gold w-full">Continue</button>
+          <button disabled={busy} className="btn-gold w-full">{busy ? "Signing in…" : "Continue"}</button>
         </form>
         <Link to="/products" className="mt-5 block text-center text-xs tracking-widest text-primary uppercase">Keep browsing</Link>
       </div>
