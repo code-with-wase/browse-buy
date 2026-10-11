@@ -32,8 +32,8 @@ export function mapProduct(a: ApiProduct): Product {
 
 // Public product APIs
 export const getProducts = async () => (await axiosInstance.get("/products/all", { params: { limit: 100 } })).data.products.map(mapProduct) as Product[];
-export const getProductById = async (id: string) => mapProduct((await axiosInstance.get(`/products/details/${id}`)).data.product);
-export const getProductBySlug = async (slug: string) => mapProduct((await axiosInstance.get(`/products/slug/${slug}`)).data.product);
+export const getProductById = async (id: string) => { const d = (await axiosInstance.get(`/products/details/${id}`)).data; return mapProduct(d.product ?? d.data); };
+export const getProductBySlug = async (slug: string) => { const d = (await axiosInstance.get(`/products/slug/${slug}`)).data; return mapProduct(d.product ?? d.data); };
 
 // Auth APIs
 export const loginApi = async (name: string, email: string) => (await axiosInstance.post("/auth/login", { name, email })).data as { token?: string; user?: { name: string; email: string } };

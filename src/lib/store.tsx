@@ -91,7 +91,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     toggleWish: (id) => setWishlist((w) => (w.includes(id) ? w.filter((x) => x !== id) : [...w, id])),
     user,
     login: (u) => { setUser(u); save("user", u); },
-    logout: () => { setUser(null); save("user", null); },
+    logout: () => { setUser(null); save("user", null); try { localStorage.removeItem("dc_token"); } catch { /* ignore */ } },
     checkout, setCheckout,
   }), [ready, products, categories, settings, orders, cart, wishlist, user, checkout, setProducts, setCategories, setSettings, setOrders, setCheckout]);
 
