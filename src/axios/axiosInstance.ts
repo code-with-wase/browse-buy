@@ -22,7 +22,6 @@ type ApiProduct = {
 
 export function mapProduct(a: ApiProduct): Product {
   const tags = (a.tags ?? []).filter((t): t is Product["tags"][number] => ["trending", "new", "best"].includes(t));
-  // eslint-disable-next-line prefer-const
   const extra = Object.fromEntries(["brand","sku","fabric","fit","pattern","sleeve","neck","occasion","washCare","packOf","countryOfOrigin","weight","hsn","highlights"].filter((k) => a[k] != null).map((k) => [k, a[k]]));
   const mapped = {
     ...extra, backendId: a.id || a._id, slug: a.slug, isActive: a.isActive ?? true,
