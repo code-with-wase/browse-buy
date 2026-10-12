@@ -22,7 +22,9 @@ type Store = {
   checkout: CheckoutSource; setCheckout: (c: CheckoutSource) => void;
 };
 
-const Ctx = createContext<Store | null>(null);
+// Keep one context instance across hot reloads so Provider and consumers always match.
+const g = globalThis as unknown as { __dcStoreCtx?: React.Context<Store | null> };
+const Ctx = g.__dcStoreCtx ?? (g.__dcStoreCtx = createContext<Store | null>(null));
 
 function load<T>(key: string, fallback: T): T {
   try {
