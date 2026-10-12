@@ -63,7 +63,7 @@ function Admin() {
           <p className="mt-2 text-sm text-muted-foreground">Enter your admin email to continue.</p>
           <input type="email" required autoFocus value={email} onChange={(e) => { setEmail(e.target.value); setBad(""); }} placeholder="admin@email.com" className="field mt-6" />
           {bad && <p className="mt-2 text-xs text-destructive">{bad}</p>}
-          <button className="btn-gold mt-5 w-full">Enter Panel</button>
+          <button disabled={busy} className="btn-gold mt-5 w-full">{busy ? "Checking…" : "Enter Panel"}</button>
           <Link to="/" className="mt-4 block text-center text-xs uppercase tracking-widest text-primary">Back to store</Link>
         </form>
       </div>
