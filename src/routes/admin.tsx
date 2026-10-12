@@ -264,7 +264,7 @@ function ProductForm({ p, busy, onSave, onClose }: { p: Product; busy: boolean; 
       <div role="dialog" aria-label="Product form" onClick={(e) => e.stopPropagation()} className="h-full w-full max-w-lg animate-in slide-in-from-right overflow-y-auto border-l bg-card p-6">
         <div className="mb-5 flex items-center justify-between"><h2 className="text-3xl">{p.id ? "Edit Product" : "New Product"}</h2><button onClick={onClose} aria-label="Close"><X /></button></div>
         <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); onSave({ ...f, images: imgs, highlights: split(lists.highlights, /\n/), sizes: split(lists.sizes, /,/), colors: split(lists.colors, /,/) }); }}>
-          <L t="Name *"><input required className="field" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value, slug: p.backendId ? f.slug : slug(e.target.value) })} maxLength={150} /></L>
+          <L t="Name *"><input required className="field" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value, slug: p.backendId ? (f.slug ?? "") : slug(e.target.value) })} maxLength={150} /></L>
           <L t="Slug *"><input required className="field" value={f.slug ?? ""} onChange={(e) => setF({ ...f, slug: slug(e.target.value) })} /></L>
           <L t="Description *"><textarea required className="field" rows={3} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} maxLength={1000} /></L>
           <div className="grid grid-cols-2 gap-3">
