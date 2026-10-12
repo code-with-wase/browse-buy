@@ -32,8 +32,6 @@ export const SPEC_FIELDS: [keyof Product, string][] = [
   ["sleeve", "Sleeve"], ["neck", "Neck / Collar"], ["occasion", "Occasion"], ["washCare", "Wash care"],
   ["packOf", "Pack of"], ["countryOfOrigin", "Country of origin"], ["weight", "Net weight"], ["hsn", "HSN code"],
 ];
-/** Emails allowed into the admin panel (Ctrl+Shift+A). */
-export const ADMIN_EMAILS = ["admin@deluxeculture.in"];
 export const WHATSAPP_NUMBER = "919130726736";
 export type CartItem = { productId: string; size: string; color: string; qty: number };
 export type OrderStatus = "Pending payment" | "Confirmed" | "Shipped" | "Delivered" | "Cancelled";
