@@ -26,6 +26,7 @@ export type Product = {
   sleeve?: string; neck?: string; occasion?: string; washCare?: string;
   packOf?: string; countryOfOrigin?: string; weight?: string; hsn?: string;
   highlights?: string[];
+  backendId?: string; slug?: string; isActive?: boolean;
 };
 export const SPEC_FIELDS: [keyof Product, string][] = [
   ["brand", "Brand"], ["sku", "SKU / Style code"], ["fabric", "Fabric"], ["fit", "Fit"], ["pattern", "Pattern"],

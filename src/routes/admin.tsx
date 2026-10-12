@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { SPEC_FIELDS, formatINR, type Category, type OrderStatus, type Product, type Settings } from "@/lib/data";
 import { useStore } from "@/lib/store";
-import { loginApi } from "@/axios/axiosInstance";
+import { loginApi, adminGetProducts, adminCreateProduct, adminUpdateProduct, adminDeleteProduct, type ProductPayload } from "@/axios/axiosInstance";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -122,10 +122,6 @@ function AdminPanel() {
         <p className="mt-8 hidden text-[0.7rem] leading-relaxed text-muted-foreground lg:block">Press Esc to exit · Ctrl+Shift+A to open</p>
       </aside>
       <div className="min-w-0 p-4 sm:p-8">
-        <div className="mb-6 flex items-start gap-2 rounded border border-primary/40 bg-accent p-3 text-xs text-accent-foreground">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-          Demo mode: data is saved only in this browser. This panel is not secured — real admin login and a database are required before going live.
-        </div>
         {alert && <StockAlert onClose={() => setAlert(false)} onManage={() => { setAlert(false); setTab("inventory"); }} />}
         <div key={tab} className="animate-rise">
           {tab === "dashboard" && <Dashboard />}
@@ -180,7 +176,7 @@ const productSchema = z.object({
   category: z.string().min(1),
   stock: z.number().int().min(0),
 });
-const blank = (cat: string): Product => ({ id: "", name: "", description: "", price: 0, originalPrice: 0, images: [], sizes: ["S", "M", "L", "XL"], colors: ["Black"], category: cat, stock: 10, tags: ["new"], rating: 4.5 });
+const blank = (cat: string): Product => ({ id: "", slug: "", isActive: true, name: "", description: "", price: 0, originalPrice: 0, images: [], sizes: ["S", "M", "L", "XL"], colors: ["Black"], category: cat, stock: 10, tags: ["new"], rating: 4.5 });
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
 function ProductsAdmin() {
@@ -191,19 +187,43 @@ function ProductsAdmin() {
   const [del, setDel] = useState<string | null>(null);
   const list = products.filter((p) => (cat === "all" || p.category === cat) && p.name.toLowerCase().includes(q.toLowerCase()));
 
-  const save = (p: Product) => {
-    const r = productSchema.safeParse(p);
-    if (!r.success) return void toast.error("Please fill name, description, prices, category and stock correctly");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    adminGetProducts().then((list) => { if (list.length) setProducts([...list, ...products.filter((c) => !c.backendId && !list.some((l) => l.id === c.id))]); })
+      .catch((e) => toast.error(apiMsg(e, "Could not load products from server")));
+  }, []);
+
+  const save = async (p: Product) => {
+    const s = (p.slug || slug(p.name)).trim();
+    if (p.name.trim().length < 2) return void toast.error("Name is required");
+    if (!s) return void toast.error("Slug is required");
+    if (!p.description.trim()) return void toast.error("Description is required");
+    if (!(p.price >= 0) || !p.price) return void toast.error("Price is required");
+    if (!(p.originalPrice >= 0) || !p.originalPrice) return void toast.error("Original price is required");
     if (p.price > p.originalPrice) return void toast.error("Price cannot exceed original price");
     if (!p.images.length) return void toast.error("Add at least one image");
-    if (p.id) setProducts(products.map((x) => (x.id === p.id ? p : x)));
-    else {
-      let id = slug(p.name) || "product";
-      while (products.some((x) => x.id === id)) id += "-1";
-      setProducts([{ ...p, id }, ...products]);
-    }
-    toast.success("Product saved");
-    setEdit(null);
+    if (!p.sizes.length) return void toast.error("Add at least one size");
+    if (!p.tags.length) return void toast.error("Select at least one tag");
+    if (!p.category) return void toast.error("Category is required");
+    if (!(p.stock >= 0)) return void toast.error("Stock is required");
+    const { id: _i, backendId, rating: _r, slug: _s, ...rest } = p;
+    const payload: ProductPayload = { ...rest, name: p.name.trim(), slug: s, description: p.description.trim(), isActive: p.isActive ?? true };
+    setBusy(true);
+    try {
+      if (backendId) { const u = await adminUpdateProduct(backendId, payload); setProducts(products.map((x) => (x.id === p.id ? u : x))); }
+      else { const c = await adminCreateProduct(payload); setProducts([c, ...products.filter((x) => x.id !== p.id)]); }
+      toast.success("Product saved");
+      setEdit(null);
+    } catch (e) { toast.error(apiMsg(e, "Could not save product")); }
+    finally { setBusy(false); }
+  };
+  const remove = async (id: string) => {
+    const p = products.find((x) => x.id === id);
+    try {
+      if (p?.backendId) await adminDeleteProduct(p.backendId);
+      setProducts(products.filter((x) => x.id !== id)); toast.success("Product deleted");
+    } catch (e) { toast.error(apiMsg(e, "Could not delete product")); }
+    setDel(null);
   };
 
   return (
@@ -227,13 +247,13 @@ function ProductsAdmin() {
         ))}
         {!list.length && <p className="py-10 text-center text-muted-foreground">No products match.</p>}
       </div>
-      {edit && <ProductForm p={edit} onSave={save} onClose={() => setEdit(null)} />}
-      <Confirm open={!!del} onClose={() => setDel(null)} text="This product will be permanently removed." onYes={() => { setProducts(products.filter((p) => p.id !== del)); setDel(null); toast.success("Product deleted"); }} />
+      {edit && <ProductForm p={edit} busy={busy} onSave={save} onClose={() => setEdit(null)} />}
+      <Confirm open={!!del} onClose={() => setDel(null)} text="This product will be permanently removed." onYes={() => del && remove(del)} />
     </>
   );
 }
 
-function ProductForm({ p, onSave, onClose }: { p: Product; onSave: (p: Product) => void; onClose: () => void }) {
+function ProductForm({ p, busy, onSave, onClose }: { p: Product; busy: boolean; onSave: (p: Product) => void; onClose: () => void }) {
   const { categories } = useStore();
   const [f, setF] = useState(p);
   const [imgs, setImgs] = useState<string[]>(p.images);
@@ -244,15 +264,16 @@ function ProductForm({ p, onSave, onClose }: { p: Product; onSave: (p: Product) 
       <div role="dialog" aria-label="Product form" onClick={(e) => e.stopPropagation()} className="h-full w-full max-w-lg animate-in slide-in-from-right overflow-y-auto border-l bg-card p-6">
         <div className="mb-5 flex items-center justify-between"><h2 className="text-3xl">{p.id ? "Edit Product" : "New Product"}</h2><button onClick={onClose} aria-label="Close"><X /></button></div>
         <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); onSave({ ...f, images: imgs, highlights: split(lists.highlights, /\n/), sizes: split(lists.sizes, /,/), colors: split(lists.colors, /,/) }); }}>
-          <L t="Name"><input className="field" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} maxLength={100} /></L>
-          <L t="Description"><textarea className="field" rows={3} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} maxLength={1000} /></L>
+          <L t="Name *"><input required className="field" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value, slug: p.backendId ? (f.slug ?? "") : slug(e.target.value) })} maxLength={150} /></L>
+          <L t="Slug *"><input required className="field" value={f.slug ?? ""} onChange={(e) => setF({ ...f, slug: slug(e.target.value) })} /></L>
+          <L t="Description *"><textarea required className="field" rows={3} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} maxLength={1000} /></L>
           <div className="grid grid-cols-2 gap-3">
-            <L t="Price (₹)"><input type="number" className="field" value={f.price || ""} onChange={(e) => setF({ ...f, price: +e.target.value })} /></L>
-            <L t="Original price (₹)"><input type="number" className="field" value={f.originalPrice || ""} onChange={(e) => setF({ ...f, originalPrice: +e.target.value })} /></L>
-            <L t="Category"><select className="field" value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })}>{categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></L>
-            <L t="Stock"><input type="number" className="field" value={f.stock} onChange={(e) => setF({ ...f, stock: Math.max(0, +e.target.value) })} /></L>
+            <L t="Price (₹) *"><input required min={0} type="number" className="field" value={f.price || ""} onChange={(e) => setF({ ...f, price: +e.target.value })} /></L>
+            <L t="Original price (₹) *"><input required min={0} type="number" className="field" value={f.originalPrice || ""} onChange={(e) => setF({ ...f, originalPrice: +e.target.value })} /></L>
+            <L t="Category *"><select required className="field" value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })}>{categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></L>
+            <L t="Stock *"><input required min={0} type="number" className="field" value={f.stock} onChange={(e) => setF({ ...f, stock: Math.max(0, +e.target.value) })} /></L>
           </div>
-          <L t="Product photos">
+          <L t="Product photos *">
             <div className="grid grid-cols-4 gap-2">
               {imgs.map((src, i) => (
                 <div key={i} className="group relative aspect-[4/5] overflow-hidden rounded border">
@@ -268,22 +289,23 @@ function ProductForm({ p, onSave, onClose }: { p: Product; onSave: (p: Product) 
             </div>
             <input className="field mt-2" placeholder="…or paste an image URL and press Enter" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const v = e.currentTarget.value.trim(); if (v) { setImgs([...imgs, v]); e.currentTarget.value = ""; } } }} />
           </L>
-          <L t="Key highlights (one per line)"><textarea className="field" rows={3} value={lists.highlights} onChange={(e) => setLists({ ...lists, highlights: e.target.value })} /></L>
+          <L t="Key highlights (one per line, optional)"><textarea className="field" rows={3} value={lists.highlights} onChange={(e) => setLists({ ...lists, highlights: e.target.value })} /></L>
           <div className="grid grid-cols-2 gap-3">
             {SPEC_FIELDS.map(([k, label]) => (
               <L key={k} t={label}><input className="field" value={(f[k] as string) ?? ""} onChange={(e) => setF({ ...f, [k]: e.target.value })} maxLength={120} /></L>
             ))}
           </div>
-          <L t="Sizes (comma separated)"><input className="field" value={lists.sizes} onChange={(e) => setLists({ ...lists, sizes: e.target.value })} /></L>
-          <L t="Colours (comma separated)"><input className="field" value={lists.colors} onChange={(e) => setLists({ ...lists, colors: e.target.value })} /></L>
-          <L t="Sections">
+          <L t="Sizes (comma separated) *"><input required className="field" value={lists.sizes} onChange={(e) => setLists({ ...lists, sizes: e.target.value })} /></L>
+          <L t="Colours (comma separated, optional)"><input className="field" value={lists.colors} onChange={(e) => setLists({ ...lists, colors: e.target.value })} /></L>
+          <L t="Tags *">
             <div className="flex gap-4 text-sm">
               {(["trending", "new", "best"] as const).map((t) => (
                 <label key={t} className="flex items-center gap-1.5"><input type="checkbox" className="accent-primary" checked={f.tags.includes(t)} onChange={() => setF({ ...f, tags: f.tags.includes(t) ? f.tags.filter((x) => x !== t) : [...f.tags, t] })} />{t}</label>
               ))}
             </div>
           </L>
-          <button className="btn-gold w-full">Save Product</button>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-primary" checked={f.isActive ?? true} onChange={(e) => setF({ ...f, isActive: e.target.checked })} />Active (visible in shop) *</label>
+          <button disabled={busy} className="btn-gold w-full">{busy ? "Saving…" : "Save Product"}</button>
         </form>
       </div>
     </div>
@@ -474,4 +496,8 @@ function SettingsAdmin() {
       </form>
     </>
   );
+}
+
+function apiMsg(e: unknown, fb: string) {
+  return (e as { response?: { data?: { message?: string } } }).response?.data?.message ?? fb;
 }
