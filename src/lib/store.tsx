@@ -11,7 +11,7 @@ type User = { email: string; name: string };
 export type CheckoutSource = { mode: "cart" } | { mode: "buynow"; item: CartItem };
 
 type Store = {
-  ready: boolean;
+  ready: boolean; productsLoaded: boolean;
   products: Product[]; setProducts: (p: Product[]) => void;
   categories: Category[]; setCategories: (c: Category[]) => void;
   settings: Settings; setSettings: (s: Settings) => void;
@@ -39,6 +39,7 @@ function save(key: string, v: unknown) {
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
+  const [productsLoaded, setProductsLoaded] = useState(false);
   const [products, setProductsS] = useState<Product[]>([]);
   const [categories, setCategoriesS] = useState<Category[]>(defaultCategories);
   const [settings, setSettingsS] = useState<Settings>(defaultSettings);
@@ -60,7 +61,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setReady(true);
     import("@/axios/axiosInstance").then(({ getProducts }) => getProducts()).then((list) => {
       setProductsS(list);
-    }).catch(() => { /* backend unreachable — keep local products */ });
+    }).catch(() => { /* backend unreachable */ }).finally(() => setProductsLoaded(true));
   }, []);
 
   useEffect(() => { if (ready) save("cart", cart); }, [cart, ready]);
@@ -73,7 +74,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const setCheckout = useCallback((c: CheckoutSource) => { setCheckoutS(c); save("checkout", c); }, []);
 
   const value = useMemo<Store>(() => ({
-    ready, products, setProducts, categories, setCategories, settings, setSettings,
+    ready, productsLoaded, products, setProducts, categories, setCategories, settings, setSettings,
     orders, setOrders, addOrder: (o) => setOrders([o, ...orders]),
     cart,
     addToCart: (i) => setCart((c) => {
@@ -90,7 +91,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     login: (u) => { setUser(u); save("user", u); },
     logout: () => { setUser(null); save("user", null); try { localStorage.removeItem("dc_token"); } catch { /* ignore */ } },
     checkout, setCheckout,
-  }), [ready, products, categories, settings, orders, cart, wishlist, user, checkout, setProducts, setCategories, setSettings, setOrders, setCheckout]);
+  }), [ready, productsLoaded, products, categories, settings, orders, cart, wishlist, user, checkout, setProducts, setCategories, setSettings, setOrders, setCheckout]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

@@ -4,13 +4,17 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ProductGrid } from "@/components/ProductCard";
 import { SectionTitle } from "@/components/site";
-import { defaultProducts, discount, formatINR, SPEC_FIELDS } from "@/lib/data";
+import { discount, formatINR, SPEC_FIELDS } from "@/lib/data";
 import { useStore } from "@/lib/store";
 import { useBuyNow } from "@/lib/useBuyNow";
 
 export const Route = createFileRoute("/products/$id")({
-  head: ({ params }) => {
-    const p = defaultProducts.find((x) => x.id === params.id);
+  loader: async ({ params }) => {
+    try { const { getProductBySlug } = await import("@/axios/axiosInstance"); return { p: await getProductBySlug(params.id) }; }
+    catch { return { p: null }; }
+  },
+  head: ({ loaderData }) => {
+    const p = loaderData?.p;
     const t = p ? `${p.name} — Deluxe Culture` : "Product — Deluxe Culture";
     const d = p ? p.description : "Premium men's wear by Deluxe Culture.";
     return { meta: [{ title: t }, { name: "description", content: d }, { property: "og:title", content: t }, { property: "og:description", content: d }] };
@@ -20,9 +24,10 @@ export const Route = createFileRoute("/products/$id")({
 
 function ProductPage() {
   const { id } = Route.useParams();
-  const { products, ready, addToCart, wishlist, toggleWish } = useStore();
+  const { products, productsLoaded, addToCart, wishlist, toggleWish } = useStore();
   const buyNow = useBuyNow();
-  const p = products.find((x) => x.id === id);
+  const p = products.find((x) => x.id === id) ?? Route.useLoaderData().p ?? undefined;
+  const ready = productsLoaded || !!p;
   const [img, setImg] = useState(0);
   const [size, setSize] = useState("");
   const [color, setColor] = useState("");
