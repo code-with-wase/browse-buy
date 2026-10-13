@@ -17,8 +17,8 @@ export const Route = createFileRoute("/products/")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Shop Men's Collection — Deluxe Culture" },
-      { name: "description", content: "Browse premium shirts, blazers, denim, jackets, kurtas and accessories. Filter by size, colour and price." },
+      { title: "Shop Men's Clothing Online — Shirts, Blazers, Jeans | Deluxe Culture Nanded" },
+      { name: "description", content: "Shop men's shirts, blazers, jeans, jackets, kurtas and accessories from Deluxe Culture, Nanded. Cash on Delivery and UPI across India." },
       { property: "og:title", content: "Shop Men's Collection — Deluxe Culture" },
       { property: "og:description", content: "Premium menswear with genuine discounts and free shipping above ₹1,999." },
     ],

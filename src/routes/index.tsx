@@ -15,11 +15,14 @@ import { useStore } from "@/lib/store";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Deluxe Culture — Premium Men's Wear | Dress Like a Better You" },
-      { name: "description", content: "Shop luxury shirts, blazers, denim, jackets, ethnic wear and accessories for men. Free shipping above ₹1,999." },
-      { property: "og:title", content: "Deluxe Culture — Premium Men's Wear" },
-      { property: "og:description", content: "Luxury menswear crafted for the modern gentleman. Dress Like a Better You." },
+      { title: "Deluxe Culture — Best Men's Clothing Store in Nanded | Premium Menswear" },
+      { name: "description", content: "Deluxe Culture is the best men's clothing store in Nanded. Shop premium shirts, blazers, jeans, jackets, kurtas & accessories online with Cash on Delivery across India." },
+      { name: "keywords", content: "Deluxe Culture, best clothing store in Nanded, men's clothing store Nanded, menswear Nanded, shirts in Nanded, blazers Nanded, kurta shop Nanded, branded clothes Nanded, online men's fashion India" },
+      { property: "og:title", content: "Deluxe Culture — Best Men's Clothing Store in Nanded" },
+      { property: "og:description", content: "Premium menswear from Nanded, delivered across India. Dress Like a Better You." },
+      { property: "og:url", content: "/" },
     ],
+    links: [{ rel: "canonical", href: "/" }],
   }),
   component: Home,
 });
