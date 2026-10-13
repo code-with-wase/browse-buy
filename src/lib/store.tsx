@@ -64,7 +64,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }).catch(() => { /* backend unreachable */ }).finally(() => setProductsLoaded(true));
   }, []);
 
-  useEffect(() => { if (ready) save("cart", cart); }, [cart, ready]);
+  useEffect(() => {
+    if (!ready) return;
+    save("cart", cart);
+    if (user) save("cart_" + user.email.toLowerCase(), cart);
+  }, [cart, ready, user]);
   useEffect(() => { if (ready) save("wishlist", wishlist); }, [wishlist, ready]);
 
   const setProducts = useCallback((p: Product[]) => { setProductsS(p); }, []);
@@ -88,8 +92,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     wishlist,
     toggleWish: (id) => setWishlist((w) => (w.includes(id) ? w.filter((x) => x !== id) : [...w, id])),
     user,
-    login: (u) => { setUser(u); save("user", u); },
-    logout: () => { setUser(null); save("user", null); try { localStorage.removeItem("dc_token"); } catch { /* ignore */ } },
+    login: (u) => {
+      // Restore this user's saved cart and merge with anything added before sign-in.
+      const saved = load<CartItem[]>("cart_" + u.email.toLowerCase(), []);
+      setCart((guest) => {
+        const merged = [...saved];
+        for (const i of guest) {
+          const idx = merged.findIndex((x) => x.productId === i.productId && x.size === i.size && x.color === i.color);
+          const ex = merged[idx];
+          if (ex) merged[idx] = { ...ex, qty: Math.min(10, Math.max(ex.qty, i.qty)) };
+          else merged.push(i);
+        }
+        return merged;
+      });
+      setUser(u); save("user", u);
+    },
+    logout: () => {
+      if (user) save("cart_" + user.email.toLowerCase(), cart);
+      setCart([]);
+      setUser(null); save("user", null); try { localStorage.removeItem("dc_token"); } catch { /* ignore */ }
+    },
     checkout, setCheckout,
   }), [ready, productsLoaded, products, categories, settings, orders, cart, wishlist, user, checkout, setProducts, setCategories, setSettings, setOrders, setCheckout]);
 
