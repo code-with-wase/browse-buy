@@ -26,7 +26,8 @@ function ProductPage() {
   const { id } = Route.useParams();
   const { products, productsLoaded, addToCart, wishlist, toggleWish } = useStore();
   const buyNow = useBuyNow();
-  const p = products.find((x) => x.id === id) ?? Route.useLoaderData().p ?? undefined;
+  const loaded = Route.useLoaderData();
+  const p = products.find((x) => x.id === id) ?? loaded?.p ?? undefined;
   const ready = productsLoaded || !!p;
   const [img, setImg] = useState(0);
   const [size, setSize] = useState("");
