@@ -99,7 +99,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const merged = [...saved];
         for (const i of guest) {
           const idx = merged.findIndex((x) => x.productId === i.productId && x.size === i.size && x.color === i.color);
-          if (idx >= 0) merged[idx] = { ...merged[idx], qty: Math.min(10, Math.max(merged[idx].qty, i.qty)) };
+          const ex = merged[idx];
+          if (ex) merged[idx] = { ...ex, qty: Math.min(10, Math.max(ex.qty, i.qty)) };
           else merged.push(i);
         }
         return merged;
