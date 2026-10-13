@@ -189,7 +189,7 @@ function ProductsAdmin() {
 
   const [busy, setBusy] = useState(false);
   useEffect(() => {
-    adminGetProducts().then((list) => { if (list.length) setProducts([...list, ...products.filter((c) => !c.backendId && !list.some((l) => l.id === c.id))]); })
+    adminGetProducts().then((list) => { setProducts(list); })
       .catch((e) => toast.error(apiMsg(e, "Could not load products from server")));
   }, []);
 
