@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import {
-  defaultCategories, defaultProducts, defaultSettings,
+  defaultCategories, defaultSettings,
   type CartItem, type Category, type Order, type Product, type Settings,
 } from "./data";
 
@@ -39,7 +39,7 @@ function save(key: string, v: unknown) {
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
-  const [products, setProductsS] = useState<Product[]>(defaultProducts);
+  const [products, setProductsS] = useState<Product[]>([]);
   const [categories, setCategoriesS] = useState<Category[]>(defaultCategories);
   const [settings, setSettingsS] = useState<Settings>(defaultSettings);
   const [orders, setOrdersS] = useState<Order[]>([]);
@@ -49,12 +49,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [checkout, setCheckoutS] = useState<CheckoutSource>({ mode: "cart" });
 
   useEffect(() => {
-    setProductsS(load<Product[]>("products", defaultProducts).map((p) => {
-      const d = defaultProducts.find((x) => x.id === p.id);
-      const ok = (u: string) => u.startsWith("data:") || u.startsWith("http") || defaultProducts.some((x) => x.images.includes(u));
-      const imgs = p.images.filter(ok);
-      return { ...p, images: imgs.length ? imgs : d?.images ?? p.images };
-    }));
     setCategoriesS(load("categories", defaultCategories));
     setSettingsS({ ...defaultSettings, ...load("settings", {}) });
     setOrdersS(load("orders", []));
@@ -62,16 +56,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setWishlist(load("wishlist", []));
     setUser(load("user", null));
     setCheckoutS(load("checkout", { mode: "cart" }));
+    try { localStorage.removeItem("dc_products"); } catch { /* ignore */ }
     setReady(true);
     import("@/axios/axiosInstance").then(({ getProducts }) => getProducts()).then((list) => {
-      if (list.length) setProductsS((cur) => [...list, ...cur.filter((c) => !list.some((l) => l.id === c.id))]);
+      setProductsS(list);
     }).catch(() => { /* backend unreachable — keep local products */ });
   }, []);
 
   useEffect(() => { if (ready) save("cart", cart); }, [cart, ready]);
   useEffect(() => { if (ready) save("wishlist", wishlist); }, [wishlist, ready]);
 
-  const setProducts = useCallback((p: Product[]) => { setProductsS(p); save("products", p); }, []);
+  const setProducts = useCallback((p: Product[]) => { setProductsS(p); }, []);
   const setCategories = useCallback((c: Category[]) => { setCategoriesS(c); save("categories", c); }, []);
   const setSettings = useCallback((s: Settings) => { setSettingsS(s); save("settings", s); }, []);
   const setOrders = useCallback((o: Order[]) => { setOrdersS(o); save("orders", o); }, []);
