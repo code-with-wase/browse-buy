@@ -102,14 +102,38 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     ready, productsLoaded, products, setProducts, categories, setCategories, settings, setSettings,
     orders, setOrders, addOrder: (o) => setOrders([o, ...orders]),
     cart,
-    addToCart: (i) => setCart((c) => {
-      const idx = c.findIndex((x) => x.productId === i.productId && x.size === i.size && x.color === i.color);
-      if (idx >= 0) return c.map((x, j) => (j === idx ? { ...x, qty: Math.min(10, x.qty + i.qty) } : x));
-      return [...c, i];
-    }),
-    updateQty: (idx, qty) => setCart((c) => c.map((x, j) => (j === idx ? { ...x, qty: Math.max(1, Math.min(10, qty)) } : x))),
-    removeItem: (idx) => setCart((c) => c.filter((_, j) => j !== idx)),
-    clearCart: () => setCart([]),
+    addToCart: (i) => {
+      setCart((c) => {
+        const idx = c.findIndex((x) => x.productId === i.productId && x.size === i.size && x.color === i.color);
+        if (idx >= 0) return c.map((x, j) => (j === idx ? { ...x, qty: Math.min(10, x.qty + i.qty) } : x));
+        return [...c, i];
+      });
+      if (user) {
+        const p = products.find((x) => x.id === i.productId);
+        if (p?.backendId) syncCart((m) => m.addCartItemApi(p.backendId as string, i.size, i.qty));
+      }
+    },
+    updateQty: (idx, qty) => {
+      const item = cart[idx];
+      const q = Math.max(1, Math.min(10, qty));
+      setCart((c) => c.map((x, j) => (j === idx ? { ...x, qty: q } : x)));
+      if (user && item) {
+        const p = products.find((x) => x.id === item.productId);
+        if (p?.backendId) syncCart((m) => m.updateCartItemApi(p.backendId as string, item.size, q));
+      }
+    },
+    removeItem: (idx) => {
+      const item = cart[idx];
+      setCart((c) => c.filter((_, j) => j !== idx));
+      if (user && item) {
+        const p = products.find((x) => x.id === item.productId);
+        if (p?.backendId) syncCart((m) => m.removeCartItemApi(p.backendId as string, item.size));
+      }
+    },
+    clearCart: () => {
+      setCart([]);
+      if (user) syncCart((m) => m.clearCartApi());
+    },
     wishlist,
     toggleWish: (id) => setWishlist((w) => (w.includes(id) ? w.filter((x) => x !== id) : [...w, id])),
     user,
@@ -127,6 +151,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return merged;
       });
       setUser(u); save("user", u);
+      // Backend se saved cart lao — doosre device/browser ka cart bhi yahi dikhega.
+      import("@/axios/axiosInstance")
+        .then((m) => m.getCartApi())
+        .then(({ items }) => {
+          const remote: CartItem[] = (items ?? [])
+            .filter((i) => i.product)
+            .map((i) => ({
+              productId: i.product!.slug || i.product!.id,
+              size: i.size,
+              color: "",
+              qty: Math.max(1, Math.min(10, i.quantity)),
+            }));
+          if (remote.length) setCart((c) => mergeCartLines(c, remote));
+        })
+        .catch(() => { /* backend unreachable — local cart hi rahega */ });
     },
     logout: () => {
       if (user) save("cart_" + user.email.toLowerCase(), cart);
