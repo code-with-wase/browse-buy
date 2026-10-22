@@ -37,6 +37,27 @@ function save(key: string, v: unknown) {
   catch { toast.error("Browser storage is full — use fewer or smaller photos"); }
 }
 
+// Backend cart sync (sirf logged-in users ke liye). Local cart turant update hota hai,
+// backend call background me jaati hai — fail ho to user ko batao, chhupao nahi.
+function syncCart(fn: (m: typeof import("@/axios/axiosInstance")) => Promise<unknown>) {
+  import("@/axios/axiosInstance")
+    .then(fn)
+    .catch(() => toast.error("Cart server par save nahi ho paya — internet connection check karein"));
+}
+
+// Ek hi line ko product+size se pehchano; khali color ko wildcard maano
+// (backend color store nahi karta, isliye server cart merge karte waqt duplicate na bane).
+function mergeCartLines(base: CartItem[], extra: CartItem[]): CartItem[] {
+  const merged = [...base];
+  for (const i of extra) {
+    const idx = merged.findIndex((x) => x.productId === i.productId && x.size === i.size && (x.color === i.color || !x.color || !i.color));
+    const ex = merged[idx];
+    if (ex) merged[idx] = { ...ex, qty: Math.min(10, Math.max(ex.qty, i.qty)) };
+    else merged.push(i);
+  }
+  return merged;
+}
+
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [productsLoaded, setProductsLoaded] = useState(false);
