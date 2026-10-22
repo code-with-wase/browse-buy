@@ -42,6 +42,24 @@ export const getProductBySlug = async (slug: string) => { const d = (await axios
 export const loginApi = async (name: string, email: string) => (await axiosInstance.post("/auth/login", { name, email })).data as { token?: string; user?: { id?: string; name: string; email: string; role?: string } };
 export const getMe = async () => (await axiosInstance.get("/auth/me")).data;
 
+// Cart APIs (require user token). Backend keys items by MongoDB product _id + size.
+export type BackendCartItem = {
+  product: { id: string; slug?: string; name: string; price: number; originalPrice?: number; images?: string[]; sizes?: string[] } | null;
+  size: string;
+  quantity: number;
+};
+export type BackendCart = { items: BackendCartItem[]; summary?: { itemCount: number; subtotal: number } };
+
+const unwrap = (d: { data?: BackendCart }) => (d.data ?? { items: [] }) as BackendCart;
+export const getCartApi = async () => unwrap((await axiosInstance.get("/cart")).data);
+export const addCartItemApi = async (productId: string, size: string, quantity = 1) =>
+  unwrap((await axiosInstance.post("/cart/items", { productId, size, quantity })).data);
+export const updateCartItemApi = async (productId: string, size: string, quantity: number) =>
+  unwrap((await axiosInstance.patch(`/cart/items/${encodeURIComponent(productId)}/${encodeURIComponent(size)}`, { quantity })).data);
+export const removeCartItemApi = async (productId: string, size: string) =>
+  unwrap((await axiosInstance.delete(`/cart/items/${encodeURIComponent(productId)}/${encodeURIComponent(size)}`)).data);
+export const clearCartApi = async () => unwrap((await axiosInstance.delete("/cart")).data);
+
 // Admin product APIs (require admin token)
 export type ProductPayload = { name: string; slug: string; description: string; price: number; originalPrice: number; images: string[]; sizes: string[]; tags: string[]; category: string; stock: number; isActive: boolean; [k: string]: unknown };
 const pickProduct = (d: { product?: ApiProduct; data?: ApiProduct }) => mapProduct((d.product ?? d.data) as ApiProduct);
