@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { formatINR, WHATSAPP_NUMBER, type Order } from "@/lib/data";
 import { shippingFor, useStore } from "@/lib/store";
+import { citiesFor, INDIAN_STATES } from "@/lib/indiaLocations";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -165,6 +166,21 @@ function Checkout() {
     </div>
   );
 
+  // State → City dropdowns (with an "Other" free-text fallback)
+  const [otherCity, setOtherCity] = useState(false);
+  const cityList = citiesFor(form.state);
+  const cityKnown = cityList.includes(form.city);
+  const showCityText = (form.city !== "" && !cityKnown) || otherCity;
+  const setStateVal = (state: string) => {
+    setOtherCity(false);
+    setForm({ ...form, state, city: citiesFor(state).includes(form.city) ? form.city : "" });
+  };
+  const setCityVal = (city: string) => {
+    if (city === "Other") { setOtherCity(true); setForm({ ...form, city: "" }); return; }
+    setOtherCity(false);
+    setForm({ ...form, city });
+  };
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
       <h1 className="text-5xl">Checkout</h1>
@@ -179,8 +195,24 @@ function Checkout() {
               {F("email", "Email", { type: "email", maxLength: 255 })}
               {F("pin", "PIN code", { inputMode: "numeric", maxLength: 6 })}
               {F("address", "Full address", { maxLength: 300 })}
-              {F("city", "City", { maxLength: 60 })}
-              {F("state", "State", { maxLength: 60 })}
+              <div>
+                <label htmlFor="state" className="eyebrow">State</label>
+                <select id="state" className="field mt-2 cursor-pointer" value={form.state} onChange={(e) => setStateVal(e.target.value)} aria-invalid={!!err.state}>
+                  <option value="">Select state…</option>
+                  {INDIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+                {err.state && <p className="mt-1 text-xs text-destructive">{err.state}</p>}
+              </div>
+              <div>
+                <label htmlFor="city" className="eyebrow">City</label>
+                <select id="city" className="field mt-2 cursor-pointer" value={showCityText ? "Other" : form.city} onChange={(e) => setCityVal(e.target.value)} disabled={!form.state} aria-invalid={!!err.city}>
+                  <option value="">{form.state ? "Select city…" : "Select state first"}</option>
+                  {cityList.map((c) => <option key={c} value={c}>{c}</option>)}
+                  {form.state && <option value="Other">Other (type below)</option>}
+                </select>
+                {showCityText && <input className="field mt-2" placeholder="Type your city" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} maxLength={60} aria-invalid={!!err.city} />}
+                {err.city && <p className="mt-1 text-xs text-destructive">{err.city}</p>}
+              </div>
             </div>
           </section>
           <section className="rounded-lg border bg-card p-6">

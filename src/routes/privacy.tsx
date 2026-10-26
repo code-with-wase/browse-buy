@@ -16,7 +16,7 @@ export const Route = createFileRoute("/privacy")({
       <article className="mx-auto max-w-3xl space-y-5 px-4 py-16 leading-relaxed text-foreground/80 sm:px-6">
         <p>We collect only the details needed to fulfil your order: name, email, mobile number and delivery address. These are shared with our team via WhatsApp to confirm and ship your order.</p>
         <p>We never sell your data. Browsing and adding to cart require no personal information; your cart and wishlist are stored only on your device.</p>
-        <p>To request deletion of your information, contact us on WhatsApp or email care@deluxeculture.in.</p>
+        <p>To request deletion of your information, contact us on WhatsApp or email deluxeculture02@gmail.com.</p>
       </article>
     </>
   ),
