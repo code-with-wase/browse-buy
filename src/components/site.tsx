@@ -103,7 +103,7 @@ export function Footer() {
           <Logo />
           <p className="mt-4 font-serif text-xl italic text-champagne">{settings.tagline}</p>
           <div className="mt-5 flex gap-3 text-muted-foreground">
-            <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram" className="hover:text-primary"><Instagram className="h-5 w-5" /></a>
+            <a href="https://www.instagram.com/invites/contact/?utm_content=bkaddij&obrf=1jin5wddld74z" target="_blank" rel="noreferrer" aria-label="Instagram" className="hover:text-primary"><Instagram className="h-5 w-5" /></a>
             <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook" className="hover:text-primary"><Facebook className="h-5 w-5" /></a>
             <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer" aria-label="WhatsApp" className="hover:text-primary"><MessageCircle className="h-5 w-5" /></a>
           </div>

@@ -49,7 +49,7 @@ function Contact() {
             <MessageCircle className="h-7 w-7 text-primary" /><div><div className="font-serif text-xl">WhatsApp Support</div><div className="text-sm text-muted-foreground">{phone}</div></div>
           </a>
           <a href={`tel:+${settings.whatsapp}`} className="flex items-center gap-4 rounded-lg border bg-card p-5 hover:border-primary"><Phone className="h-7 w-7 text-primary" /><div><div className="font-serif text-xl">Call Us</div><div className="text-sm text-muted-foreground">{phone}</div></div></a>
-          <div className="flex items-center gap-4 rounded-lg border bg-card p-5"><Mail className="h-7 w-7 text-primary" /><div><div className="font-serif text-xl">Email</div><div className="text-sm text-muted-foreground">care@deluxeculture.in</div></div></div>
+          <a href="mailto:deluxeculture02@gmail.com" className="flex items-center gap-4 rounded-lg border bg-card p-5 transition hover:border-primary"><Mail className="h-7 w-7 text-primary" /><div><div className="font-serif text-xl">Email</div><div className="text-sm text-muted-foreground">deluxeculture02@gmail.com</div></div></a>
           <div className="flex items-center gap-4 rounded-lg border bg-card p-5"><MapPin className="h-7 w-7 text-primary" /><div><div className="font-serif text-xl">Studio</div><div className="text-sm text-muted-foreground">India</div></div></div>
         </div>
         <form onSubmit={submit} noValidate className="space-y-4 rounded-lg border bg-card p-7">
